@@ -36,7 +36,7 @@ def assemble_data():
         else:
             visited = False
     df = pd.DataFrame.from_dict(dict)
-    df.to_csv("./combined.csv", index = False)
+    df.to_csv("./csv_data/combined.csv", index = False)
 
 def pre_match_stats():
     players = {}
@@ -67,45 +67,85 @@ def pre_match_stats():
         play["players"].append(key)
     df = pd.DataFrame.from_dict(play)
     df.to_csv("./players.csv", index = False)
-    data = pd.read_csv("./combined.csv", encoding = "ISO-8859-1")
-    dict = pd.read_csv("./combined.csv", encoding = "ISO-8859-1").to_dict(orient="list")
+    data = pd.read_csv("./csv_data/combined.csv", encoding = "ISO-8859-1")
+    dict = pd.read_csv("./csv_data/combined.csv", encoding = "ISO-8859-1").to_dict(orient="list")
     dict["w_expected_1stServePoint%"] = []
     dict["w_expected_2ndServePoint%"] = []
     dict["l_expected_1stServePoint%"] = []
     dict["l_expected_2ndServePoint%"] = []
     for index, row in data.iterrows():
         #print (index)
-        if (hp.cleanBetName(row["Winner"]) in players and hp.cleanBetName(row["Loser"]) in players):
-            dict["w_expected_1stServePoint%"].append(np.average(players[hp.cleanBetName(row["Winner"])]["1stIn%"]) * (np.average(players[hp.cleanBetName(row["Winner"])]["1stWin%"]) + np.average(players[hp.cleanBetName(row["Loser"])]["Def1st%"])) / 2)
-            dict["w_expected_2ndServePoint%"].append(np.average(players[hp.cleanBetName(row["Winner"])]["2ndIn%"]) * (np.average(players[hp.cleanBetName(row["Winner"])]["2ndWin%"]) + np.average(players[hp.cleanBetName(row["Loser"])]["Def2nd%"])) / 2)
-            dict["l_expected_1stServePoint%"].append(np.average(players[hp.cleanBetName(row["Loser"])]["1stIn%"]) * (np.average(players[hp.cleanBetName(row["Loser"])]["1stWin%"]) + np.average(players[hp.cleanBetName(row["Winner"])]["Def1st%"])) / 2)
-            dict["l_expected_2ndServePoint%"].append(np.average(players[hp.cleanBetName(row["Loser"])]["2ndIn%"]) * (np.average(players[hp.cleanBetName(row["Loser"])]["2ndWin%"]) + np.average(players[hp.cleanBetName(row["Winner"])]["Def2nd%"])) / 2)
+        wFound = False
+        lFound = False
+        wKey = ""
+        lKey = ""
+        for key in players:
+            if (hp.cleanBetName(row["Winner"])[0] in key and hp.cleanBetName(row["Winner"])[1][0] + "." in key):
+                wFound = True
+                wKey = key
+            if (hp.cleanBetName(row["Loser"])[0] in key and hp.cleanBetName(row["Loser"])[1][0] + "." in key):
+                lFound = True
+                lKey = key
+        if (wFound and lFound):
+            dict["w_expected_1stServePoint%"].append(np.average(players[wKey]["1stIn%"]) * (np.average(players[wKey]["1stWin%"]) + np.average(players[lKey]["Def1st%"])) / 2)
+            dict["w_expected_2ndServePoint%"].append(np.average(players[wKey]["2ndIn%"]) * (np.average(players[wKey]["2ndWin%"]) + np.average(players[lKey]["Def2nd%"])) / 2)
+            dict["l_expected_1stServePoint%"].append(np.average(players[lKey]["1stIn%"]) * (np.average(players[lKey]["1stWin%"]) + np.average(players[wKey]["Def1st%"])) / 2)
+            dict["l_expected_2ndServePoint%"].append(np.average(players[lKey]["2ndIn%"]) * (np.average(players[lKey]["2ndWin%"]) + np.average(players[wKey]["Def2nd%"])) / 2)
         else:
-            if (hp.cleanBetName(row["Winner"]) not in players):
+            if (not wFound):
                 print (hp.cleanBetName(row["Winner"]))
-            if (hp.cleanBetName(row["Loser"]) not in players):
+            if (not lFound):
                 print (hp.cleanBetName(row["Loser"]))
             dict["w_expected_1stServePoint%"].append(np.nan)
             dict["w_expected_2ndServePoint%"].append(np.nan)
             dict["l_expected_1stServePoint%"].append(np.nan)
             dict["l_expected_2ndServePoint%"].append(np.nan)
-        if (hp.cleanBetName(row["Winner"]) not in players):
-            players[hp.cleanBetName(row["Winner"])] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[]}
-        if (hp.cleanBetName(row["Loser"]) not in players):
-            players[hp.cleanBetName(row["Loser"])] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[]}
+        if (not wFound):
+            name = hp.cleanBetName(row["Winner"])[0] + " "
+            for letter in hp.cleanBetName(row["Winner"])[1]:
+                if (letter == ""):
+                    break
+                name = name + letter + "."
+            wKey = name
+            players[wKey] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[]}
+        if (not lFound):
+            name = hp.cleanBetName(row["Loser"])[0] + " "
+            for letter in hp.cleanBetName(row["Loser"])[1]:
+                if (letter == ""):
+                    break
+                name = name + letter + "."
+            lKey = name
+            players[lKey] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[]}
         if (row["w_svpt"] > 20 and row["l_svpt"] > 20 and row["w_svpt"] - row["w_1stIn"] - row["w_df"] > 0 and row["l_svpt"] - row["l_1stIn"] - row["l_df"] > 0):
-            players[hp.cleanBetName(row["Winner"])]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
-            players[hp.cleanBetName(row["Winner"])]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
-            players[hp.cleanBetName(row["Winner"])]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
-            players[hp.cleanBetName(row["Winner"])]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
-            players[hp.cleanBetName(row["Winner"])]["Def1st%"].append(1 - (row["l_1stWon"] / row["l_1stIn"]))
-            players[hp.cleanBetName(row["Winner"])]["Def2nd%"].append(1 - (row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
+            players[wKey]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
+            players[wKey]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
+            players[wKey]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
+            players[wKey]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
+            players[wKey]["Def1st%"].append(1 - (row["l_1stWon"] / row["l_1stIn"]))
+            players[wKey]["Def2nd%"].append(1 - (row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
 
-            players[hp.cleanBetName(row["Loser"])]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
-            players[hp.cleanBetName(row["Loser"])]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
-            players[hp.cleanBetName(row["Loser"])]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
-            players[hp.cleanBetName(row["Loser"])]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
-            players[hp.cleanBetName(row["Loser"])]["Def1st%"].append(1 - (row["w_1stWon"] / row["w_1stIn"]))
-            players[hp.cleanBetName(row["Loser"])]["Def2nd%"].append(1 - (row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
+            players[lKey]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
+            players[lKey]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
+            players[lKey]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
+            players[lKey]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
+            players[lKey]["Def1st%"].append(1 - (row["w_1stWon"] / row["w_1stIn"]))
+            players[lKey]["Def2nd%"].append(1 - (row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
     df = pd.DataFrame.from_dict(dict)
-    df.to_csv("./preMatchExpectations.csv", index = False)
+    df.to_csv("./csv_data/preMatchExpectations.csv", index = False)
+
+def train_test_split(splitYear = 2015):
+    data = pd.read_csv("./csv_data/preMatchExpectations.csv", encoding = "ISO-8859-1")
+    test = False
+    trainRows = []
+    testRows = []
+    for index, row in data.iterrows():
+        if (int(row["Date"].split("/")[2]) == splitYear):
+            test = True
+        if (test and not np.isnan(row["w_expected_1stServePoint%"]) and row["Comment"] == "Completed"):
+            testRows.append(index)
+        elif (not test and not np.isnan(row["w_expected_1stServePoint%"]) and row["Comment"] == "Completed"):
+            trainRows.append(index)
+    data.iloc[trainRows].to_csv("./csv_data/preMatchExpectations_train.csv", index = False)
+    data.iloc[testRows].to_csv("./csv_data/preMatchExpectations_test.csv", index = False)
+
+#def logistic_regression():

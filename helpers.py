@@ -7,21 +7,15 @@ def same_name(betName, statName):
         if (x == betName.split()[len(betName.split()) - 1]):
             bFirstLetter = x.split(".")[0]
             break
-        if (bLast == ""):
-            bLast = x
-        else:
-            bLast = bLast + " " + x
-    bLast = bLast.replace("-", " ")
+        bLast = bLast + x
+    bLast = bLast.replace("-", "")
     bLast = bLast.replace("'", "")
     for x in statName.split():
         if (x == statName.split()[0]):
             sFirstLetter = statName.split()[0][0]
             continue
-        if (sLast == ""):
-            sLast = x
-        else:
-            sLast = sLast + " " + x
-    sLast = sLast.replace("-", " ")
+        sLast = sLast + x
+    sLast = sLast.replace("-", "")
     sLast = sLast.replace("'", "")
     if ((bLast in sLast or sLast in bLast) and sFirstLetter == bFirstLetter):
         return (True)
@@ -36,12 +30,18 @@ def last_f_convert(firstLast):
             sFirstLetter = firstLast.split()[0][0]
             continue
         sLast = sLast + x
-    sLast = sLast.replace("-", " ")
+    sLast = sLast.replace("-", "")
     sLast = sLast.replace("'", "")
     return (sLast + " " + sFirstLetter + '.')
 
 def cleanBetName(lastF):
     lastF = lastF.lower()
-    lastF = lastF.replace("-", " ")
-    lastF = lastF.replace("'", "")
-    return (lastF)
+    bLast = ""
+    for x in lastF.split():
+        if (x == lastF.split()[len(lastF.split()) - 1]):
+            bFirstLetter = x.split(".")
+            break
+        bLast = bLast + x
+    bLast = bLast.replace("-", "")
+    bLast = bLast.replace("'", "")
+    return (bLast, bFirstLetter)
