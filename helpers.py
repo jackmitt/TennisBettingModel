@@ -1,3 +1,5 @@
+import numpy as np
+
 def same_name(betName, statName):
     betName = betName.lower()
     statName = statName.lower()
@@ -45,3 +47,6 @@ def cleanBetName(lastF):
     bLast = bLast.replace("-", "")
     bLast = bLast.replace("'", "")
     return (bLast, bFirstLetter)
+
+def bayesianAdjust(prior, support):
+    return ((len(prior) * np.average(prior) + len(support) * np.average(support)) / (len(prior) + len(support)))

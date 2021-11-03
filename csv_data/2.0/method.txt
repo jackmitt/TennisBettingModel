@@ -1,0 +1,1 @@
+added a set of 'adjusted' stats obtained by scaling performance based on opponents typical performance. still no adjustment for new players, surface, etc. basic logistic regression

@@ -1,0 +1,1 @@
+Regression with only the adjusted stats

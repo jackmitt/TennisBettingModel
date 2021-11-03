@@ -1,0 +1,1 @@
+only the basic stats, no adjustments, basic logistic regression
