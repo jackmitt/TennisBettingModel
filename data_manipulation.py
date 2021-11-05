@@ -42,6 +42,10 @@ def assemble_data():
     df.to_csv("./csv_data/combined.csv", index = False)
 
 def pre_match_stats():
+    newWin1 = -0.394
+    newWin2 = -0.240
+    newDef1 = 0.226
+    newDef2 = 0.249
     data = pd.read_csv("./csv_data/combined.csv", encoding = "ISO-8859-1")
     win1 = []
     win2 = []
@@ -79,52 +83,106 @@ def pre_match_stats():
         for index, row in stats.iterrows():
             print (index, year)
             if (hp.last_f_convert(row["winner_name"]) not in players):
-                players[hp.last_f_convert(row["winner_name"])] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
+                players[hp.last_f_convert(row["winner_name"])] = {}
+                for surface in ["All", "Hard", "Clay", "Grass", "Carpet"]:
+                    players[hp.last_f_convert(row["winner_name"])][surface] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
             if (hp.last_f_convert(row["loser_name"]) not in players):
-                players[hp.last_f_convert(row["loser_name"])] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
+                players[hp.last_f_convert(row["loser_name"])] = {}
+                for surface in ["All", "Hard", "Clay", "Grass", "Carpet"]:
+                    players[hp.last_f_convert(row["loser_name"])][surface] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
             if (row["w_svpt"] > 20 and row["l_svpt"] > 20 and row["w_svpt"] - row["w_1stIn"] - row["w_df"] > 0):
-                if (len(players[hp.last_f_convert(row["loser_name"])]["1stWin%"]) > 0):
-                    players[hp.last_f_convert(row["winner_name"])]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - ((np.average(players[hp.last_f_convert(row["loser_name"])]["Def1st%"]) - win1avg) / win1std))
-                    players[hp.last_f_convert(row["winner_name"])]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - ((np.average(players[hp.last_f_convert(row["loser_name"])]["Def2nd%"]) - win2avg) / win2std))
-                    players[hp.last_f_convert(row["winner_name"])]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - ((np.average(players[hp.last_f_convert(row["loser_name"])]["1stWin%"]) - win1avg) / win1std))
-                    players[hp.last_f_convert(row["winner_name"])]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - ((np.average(players[hp.last_f_convert(row["loser_name"])]["2ndWin%"]) - win2avg) / win2std))
+                nAll = len(players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%"])
+                nSurf = len(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%"])
+                if (nAll > 10):
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["Def1st%Adj"]))
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["Def2nd%Adj"]))
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%Adj"]))
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["2ndWin%Adj"]))
+                elif (nAll > 0):
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - ((nAll * np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["Def1st%Adj"])) + (10 - nAll) * newDef1) / 10)
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - ((nAll * np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["Def2nd%Adj"])) + (10 - nAll) * newDef2) / 10)
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - ((nAll * np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%Adj"])) + (10 - nAll) * newWin1) / 10)
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - ((nAll * np.average(players[hp.last_f_convert(row["loser_name"])]["All"]["2ndWin%Adj"])) + (10 - nAll) * newWin2) / 10)
                 else:
-                    players[hp.last_f_convert(row["winner_name"])]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std))
-                    players[hp.last_f_convert(row["winner_name"])]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std))
-                    players[hp.last_f_convert(row["winner_name"])]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std))
-                    players[hp.last_f_convert(row["winner_name"])]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std))
-
-                if (len(players[hp.last_f_convert(row["winner_name"])]["1stWin%"]) > 0):
-                    players[hp.last_f_convert(row["loser_name"])]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - ((np.average(players[hp.last_f_convert(row["winner_name"])]["Def1st%"]) - win1avg) / win1std))
-                    players[hp.last_f_convert(row["loser_name"])]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - ((np.average(players[hp.last_f_convert(row["winner_name"])]["Def2nd%"]) - win2avg) / win2std))
-                    players[hp.last_f_convert(row["loser_name"])]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - ((np.average(players[hp.last_f_convert(row["winner_name"])]["1stWin%"]) - win1avg) / win1std))
-                    players[hp.last_f_convert(row["loser_name"])]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - ((np.average(players[hp.last_f_convert(row["winner_name"])]["2ndWin%"]) - win2avg) / win2std))
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - newDef1)
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - newDef2)
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) + newWin1)
+                    players[hp.last_f_convert(row["winner_name"])]["All"]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) + newWin2)
+                if (nSurf > 10):
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def1st%Adj"]))
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def2nd%Adj"]))
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%Adj"]))
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndWin%Adj"]))
+                elif (nSurf > 0):
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - ((nSurf * np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def1st%Adj"])) + (10 - nSurf) * newDef1) / 10)
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - ((nSurf * np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def2nd%Adj"])) + (10 - nSurf) * newDef2) / 10)
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - ((nSurf * np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%Adj"])) + (10 - nSurf) * newWin1) / 10)
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - ((nSurf * np.average(players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndWin%Adj"])) + (10 - nSurf) * newWin2) / 10)
                 else:
-                    players[hp.last_f_convert(row["loser_name"])]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std))
-                    players[hp.last_f_convert(row["loser_name"])]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std))
-                    players[hp.last_f_convert(row["loser_name"])]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std))
-                    players[hp.last_f_convert(row["loser_name"])]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std))
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - 0.1)
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - 0.1)
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) + 0.1)
+                    players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) + 0.1)
 
-                players[hp.last_f_convert(row["winner_name"])]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
-                players[hp.last_f_convert(row["winner_name"])]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
-                players[hp.last_f_convert(row["winner_name"])]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
-                players[hp.last_f_convert(row["winner_name"])]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
-                players[hp.last_f_convert(row["winner_name"])]["Def1st%"].append((row["l_1stWon"] / row["l_1stIn"]))
-                players[hp.last_f_convert(row["winner_name"])]["Def2nd%"].append((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
-                #players[hp.last_f_convert(row["winner_name"])]["Date"].append(datetime.date(int(str(row["tourney_date"])[:4]), int(str(row["tourney_date"])[4:6]), int(str(row["tourney_date"])[6:8])))
+                nAll = len(players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%"])
+                nSurf = len(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%"])
+                if (nAll > 10):
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["Def1st%Adj"]))
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["Def2nd%Adj"]))
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%Adj"]))
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["2ndWin%Adj"]))
+                elif (nAll > 0):
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - ((nAll * np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["Def1st%Adj"])) + (10 - nAll) * newDef1) / 10)
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - ((nAll * np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["Def2nd%Adj"])) + (10 - nAll) * newDef2) / 10)
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - ((nAll * np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%Adj"])) + (10 - nAll) * newWin1) / 10)
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - ((nAll * np.average(players[hp.last_f_convert(row["winner_name"])]["All"]["2ndWin%Adj"])) + (10 - nAll) * newWin2) / 10)
+                else:
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - newDef1)
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - newDef2)
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) + newWin1)
+                    players[hp.last_f_convert(row["loser_name"])]["All"]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) + newWin2)
+                if (nSurf > 10):
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def1st%Adj"]))
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def2nd%Adj"]))
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%Adj"]))
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndWin%Adj"]))
+                elif (nSurf > 0):
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - ((nSurf * np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def1st%Adj"])) + (10 - nSurf) * newDef1) / 10)
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - ((nSurf * np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def2nd%Adj"])) + (10 - nSurf) * newDef2) / 10)
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - ((nSurf * np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%Adj"])) + (10 - nSurf) * newWin1) / 10)
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - ((nSurf * np.average(players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndWin%Adj"])) + (10 - nSurf) * newWin2) / 10)
+                else:
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - newDef1)
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - newDef2)
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) + newWin1)
+                    players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) + newWin2)
 
-                players[hp.last_f_convert(row["loser_name"])]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
-                players[hp.last_f_convert(row["loser_name"])]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
-                players[hp.last_f_convert(row["loser_name"])]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
-                players[hp.last_f_convert(row["loser_name"])]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
-                players[hp.last_f_convert(row["loser_name"])]["Def1st%"].append((row["w_1stWon"] / row["w_1stIn"]))
-                players[hp.last_f_convert(row["loser_name"])]["Def2nd%"].append((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
-                #players[hp.last_f_convert(row["loser_name"])]["Date"].append(datetime.date(int(str(row["tourney_date"])[:4]), int(str(row["tourney_date"])[4:6]), int(str(row["tourney_date"])[6:8])))
-    play = {"players":[]}
-    for key in players:
-        play["players"].append(key)
-    df = pd.DataFrame.from_dict(play)
-    df.to_csv("./players.csv", index = False)
+                players[hp.last_f_convert(row["winner_name"])]["All"]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
+                players[hp.last_f_convert(row["winner_name"])]["All"]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
+                players[hp.last_f_convert(row["winner_name"])]["All"]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
+                players[hp.last_f_convert(row["winner_name"])]["All"]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
+                players[hp.last_f_convert(row["winner_name"])]["All"]["Def1st%"].append((row["l_1stWon"] / row["l_1stIn"]))
+                players[hp.last_f_convert(row["winner_name"])]["All"]["Def2nd%"].append((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
+                # players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
+                # players[hp.last_f_convert(row["winner_name"])][row["surface"]]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
+                # players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
+                # players[hp.last_f_convert(row["winner_name"])][row["surface"]]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
+                # players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def1st%"].append((row["l_1stWon"] / row["l_1stIn"]))
+                # players[hp.last_f_convert(row["winner_name"])][row["surface"]]["Def2nd%"].append((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
+
+                players[hp.last_f_convert(row["loser_name"])]["All"]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
+                players[hp.last_f_convert(row["loser_name"])]["All"]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
+                players[hp.last_f_convert(row["loser_name"])]["All"]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
+                players[hp.last_f_convert(row["loser_name"])]["All"]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
+                players[hp.last_f_convert(row["loser_name"])]["All"]["Def1st%"].append((row["w_1stWon"] / row["w_1stIn"]))
+                players[hp.last_f_convert(row["loser_name"])]["All"]["Def2nd%"].append((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
+                # players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
+                # players[hp.last_f_convert(row["loser_name"])][row["surface"]]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
+                # players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
+                # players[hp.last_f_convert(row["loser_name"])][row["surface"]]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
+                # players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def1st%"].append((row["w_1stWon"] / row["w_1stIn"]))
+                # players[hp.last_f_convert(row["loser_name"])][row["surface"]]["Def2nd%"].append((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
+
     data = pd.read_csv("./csv_data/combined.csv", encoding = "ISO-8859-1")
     dict = pd.read_csv("./csv_data/combined.csv", encoding = "ISO-8859-1").to_dict(orient="list")
     dict["w_expected_1stServePoint%"] = []
@@ -135,6 +193,12 @@ def pre_match_stats():
     dict["w_adj_expected_2ndServePoint%"] = []
     dict["l_adj_expected_1stServePoint%"] = []
     dict["l_adj_expected_2ndServePoint%"] = []
+    dict["w_surf_adj_expected_1stServePoint%"] = []
+    dict["w_surf_adj_expected_2ndServePoint%"] = []
+    dict["l_surf_adj_expected_1stServePoint%"] = []
+    dict["l_surf_adj_expected_2ndServePoint%"] = []
+    dict["w_gp"] = []
+    dict["l_gp"] = []
     for index, row in data.iterrows():
         print (index)
         wFound = False
@@ -149,50 +213,80 @@ def pre_match_stats():
                 lFound = True
                 lKey = key
         if (wFound and lFound):
-            if (len(players[wKey]["1stIn%"]) < 10):
-                w_1st_in = (len(players[wKey]["1stIn%"]) * np.average(players[wKey]["1stIn%"]) + (10 - len(players[wKey]["1stIn%"])) * naiveIn1) / 10
-                w_2nd_in = (len(players[wKey]["2ndIn%"]) * np.average(players[wKey]["2ndIn%"]) + (10 - len(players[wKey]["2ndIn%"])) * naiveIn2) / 10
-                w_1st_win = (len(players[wKey]["1stWin%"]) * np.average(players[wKey]["1stWin%"]) + (10 - len(players[wKey]["1stWin%"])) * naiveWin1) / 10
-                w_2nd_win = (len(players[wKey]["2ndWin%"]) * np.average(players[wKey]["2ndWin%"]) + (10 - len(players[wKey]["2ndWin%"])) * naiveWin2) / 10
-                w_1st_def = (len(players[wKey]["Def1st%"]) * np.average(players[wKey]["Def1st%"]) - (10 - len(players[wKey]["Def1st%"])) * naiveWin1) / 10
-                w_2nd_def = (len(players[wKey]["Def2nd%"]) * np.average(players[wKey]["Def2nd%"]) - (10 - len(players[wKey]["Def2nd%"])) * naiveWin2) / 10
-                w_adj_1st_win = (len(players[wKey]["1stWin%Adj"]) * np.average(players[wKey]["1stWin%Adj"]) + (10 - len(players[wKey]["1stWin%Adj"])) * -0.1) / 10
-                w_adj_2nd_win = (len(players[wKey]["2ndWin%Adj"]) * np.average(players[wKey]["2ndWin%Adj"]) + (10 - len(players[wKey]["2ndWin%Adj"])) * -0.1) / 10
-                w_adj_1st_def = (len(players[wKey]["Def1st%Adj"]) * np.average(players[wKey]["Def1st%Adj"]) - (10 - len(players[wKey]["Def1st%Adj"])) * -0.1) / 10
-                w_adj_2nd_def = (len(players[wKey]["Def2nd%Adj"]) * np.average(players[wKey]["Def2nd%Adj"]) - (10 - len(players[wKey]["Def2nd%Adj"])) * -0.1) / 10
+            if (len(players[wKey]["All"]["1stIn%"]) < 10):
+                w_1st_in = (len(players[wKey]["All"]["1stIn%"]) * np.average(players[wKey]["All"]["1stIn%"]) + (10 - len(players[wKey]["All"]["1stIn%"])) * naiveIn1) / 10
+                w_2nd_in = (len(players[wKey]["All"]["2ndIn%"]) * np.average(players[wKey]["All"]["2ndIn%"]) + (10 - len(players[wKey]["All"]["2ndIn%"])) * naiveIn2) / 10
+                w_1st_win = (len(players[wKey]["All"]["1stWin%"]) * np.average(players[wKey]["All"]["1stWin%"]) + (10 - len(players[wKey]["All"]["1stWin%"])) * naiveWin1) / 10
+                w_2nd_win = (len(players[wKey]["All"]["2ndWin%"]) * np.average(players[wKey]["All"]["2ndWin%"]) + (10 - len(players[wKey]["All"]["2ndWin%"])) * naiveWin2) / 10
+                w_1st_def = (len(players[wKey]["All"]["Def1st%"]) * np.average(players[wKey]["All"]["Def1st%"]) - (10 - len(players[wKey]["All"]["Def1st%"])) * naiveWin1) / 10
+                w_2nd_def = (len(players[wKey]["All"]["Def2nd%"]) * np.average(players[wKey]["All"]["Def2nd%"]) - (10 - len(players[wKey]["All"]["Def2nd%"])) * naiveWin2) / 10
+                w_adj_1st_win = (len(players[wKey]["All"]["1stWin%Adj"]) * np.average(players[wKey]["All"]["1stWin%Adj"]) + (10 - len(players[wKey]["All"]["1stWin%Adj"])) * newWin1) / 10
+                w_adj_2nd_win = (len(players[wKey]["All"]["2ndWin%Adj"]) * np.average(players[wKey]["All"]["2ndWin%Adj"]) + (10 - len(players[wKey]["All"]["2ndWin%Adj"])) * newWin2) / 10
+                w_adj_1st_def = (len(players[wKey]["All"]["Def1st%Adj"]) * np.average(players[wKey]["All"]["Def1st%Adj"]) - (10 - len(players[wKey]["All"]["Def1st%Adj"])) * newDef1) / 10
+                w_adj_2nd_def = (len(players[wKey]["All"]["Def2nd%Adj"]) * np.average(players[wKey]["All"]["Def2nd%Adj"]) - (10 - len(players[wKey]["All"]["Def2nd%Adj"])) * newDef2) / 10
             else:
-                w_1st_in = np.average(players[wKey]["1stIn%"])
-                w_2nd_in = np.average(players[wKey]["2ndIn%"])
-                w_1st_win = np.average(players[wKey]["1stWin%"])
-                w_2nd_win = np.average(players[wKey]["2ndWin%"])
-                w_1st_def = np.average(players[wKey]["Def1st%"])
-                w_2nd_def = np.average(players[wKey]["Def2nd%"])
-                w_adj_1st_win = np.average(players[wKey]["1stWin%Adj"])
-                w_adj_2nd_win = np.average(players[wKey]["2ndWin%Adj"])
-                w_adj_1st_def = np.average(players[wKey]["Def1st%Adj"])
-                w_adj_2nd_def = np.average(players[wKey]["Def2nd%Adj"])
-            if (len(players[lKey]["1stIn%"]) < 10):
-                l_1st_in = (len(players[lKey]["1stIn%"]) * np.average(players[lKey]["1stIn%"]) + (10 - len(players[lKey]["1stIn%"])) * naiveIn1) / 10
-                l_2nd_in = (len(players[lKey]["2ndIn%"]) * np.average(players[lKey]["2ndIn%"]) + (10 - len(players[lKey]["2ndIn%"])) * naiveIn2) / 10
-                l_1st_win = (len(players[lKey]["1stWin%"]) * np.average(players[lKey]["1stWin%"]) + (10 - len(players[lKey]["1stWin%"])) * naiveWin1) / 10
-                l_2nd_win = (len(players[lKey]["2ndWin%"]) * np.average(players[lKey]["2ndWin%"]) + (10 - len(players[lKey]["2ndWin%"])) * naiveWin2) / 10
-                l_1st_def = (len(players[lKey]["Def1st%"]) * np.average(players[lKey]["Def1st%"]) - (10 - len(players[lKey]["Def1st%"])) * naiveWin1) / 10
-                l_2nd_def = (len(players[lKey]["Def2nd%"]) * np.average(players[lKey]["Def2nd%"]) - (10 - len(players[lKey]["Def2nd%"])) * naiveWin2) / 10
-                l_adj_1st_win = (len(players[lKey]["1stWin%Adj"]) * np.average(players[lKey]["1stWin%Adj"]) + (10 - len(players[lKey]["1stWin%Adj"])) * -0.1) / 10
-                l_adj_2nd_win = (len(players[lKey]["2ndWin%Adj"]) * np.average(players[lKey]["2ndWin%Adj"]) + (10 - len(players[lKey]["2ndWin%Adj"])) * -0.1) / 10
-                l_adj_1st_def = (len(players[lKey]["Def1st%Adj"]) * np.average(players[lKey]["Def1st%Adj"]) - (10 - len(players[lKey]["Def1st%Adj"])) * -0.1) / 10
-                l_adj_2nd_def = (len(players[lKey]["Def2nd%Adj"]) * np.average(players[lKey]["Def2nd%Adj"]) - (10 - len(players[lKey]["Def2nd%Adj"])) * -0.1) / 10
+                w_1st_in = np.average(players[wKey]["All"]["1stIn%"])
+                w_2nd_in = np.average(players[wKey]["All"]["2ndIn%"])
+                w_1st_win = np.average(players[wKey]["All"]["1stWin%"])
+                w_2nd_win = np.average(players[wKey]["All"]["2ndWin%"])
+                w_1st_def = np.average(players[wKey]["All"]["Def1st%"])
+                w_2nd_def = np.average(players[wKey]["All"]["Def2nd%"])
+                w_adj_1st_win = np.average(players[wKey]["All"]["1stWin%Adj"])
+                w_adj_2nd_win = np.average(players[wKey]["All"]["2ndWin%Adj"])
+                w_adj_1st_def = np.average(players[wKey]["All"]["Def1st%Adj"])
+                w_adj_2nd_def = np.average(players[wKey]["All"]["Def2nd%Adj"])
+            if (len(players[wKey][row["Surface"]]["1stWin%Adj"]) > 10):
+                w_surf_adj_1st_win = np.average(players[wKey][row["Surface"]]["1stWin%Adj"])
+                w_surf_adj_2nd_win = np.average(players[wKey][row["Surface"]]["2ndWin%Adj"])
+                w_surf_adj_1st_def = np.average(players[wKey][row["Surface"]]["Def1st%Adj"])
+                w_surf_adj_2nd_def = np.average(players[wKey][row["Surface"]]["Def2nd%Adj"])
+            elif (len(players[wKey][row["Surface"]]["1stWin%Adj"]) > 0):
+                w_surf_adj_1st_win = (len(players[wKey][row["Surface"]]["1stWin%Adj"]) * np.average(players[wKey][row["Surface"]]["1stWin%Adj"]) + (10 - len(players[wKey][row["Surface"]]["1stWin%Adj"])) * newWin1) / 10
+                w_surf_adj_2nd_win = (len(players[wKey][row["Surface"]]["2ndWin%Adj"]) * np.average(players[wKey][row["Surface"]]["2ndWin%Adj"]) + (10 - len(players[wKey][row["Surface"]]["2ndWin%Adj"])) * newWin2) / 10
+                w_surf_adj_1st_def = (len(players[wKey][row["Surface"]]["Def1st%Adj"]) * np.average(players[wKey][row["Surface"]]["Def1st%Adj"]) - (10 - len(players[wKey][row["Surface"]]["Def1st%Adj"])) * newDef1) / 10
+                w_surf_adj_2nd_def = (len(players[wKey][row["Surface"]]["Def2nd%Adj"]) * np.average(players[wKey][row["Surface"]]["Def2nd%Adj"]) - (10 - len(players[wKey][row["Surface"]]["Def2nd%Adj"])) * newDef2) / 10
             else:
-                l_1st_in = np.average(players[lKey]["1stIn%"])
-                l_2nd_in = np.average(players[lKey]["2ndIn%"])
-                l_1st_win = np.average(players[lKey]["1stWin%"])
-                l_2nd_win = np.average(players[lKey]["2ndWin%"])
-                l_1st_def = np.average(players[lKey]["Def1st%"])
-                l_2nd_def = np.average(players[lKey]["Def2nd%"])
-                l_adj_1st_win = np.average(players[lKey]["1stWin%Adj"])
-                l_adj_2nd_win = np.average(players[lKey]["2ndWin%Adj"])
-                l_adj_1st_def = np.average(players[lKey]["Def1st%Adj"])
-                l_adj_2nd_def = np.average(players[lKey]["Def2nd%Adj"])
+                w_surf_adj_1st_win = newWin1
+                w_surf_adj_2nd_win = newWin2
+                w_surf_adj_1st_def = newDef1
+                w_surf_adj_2nd_def = newDef2
+            if (len(players[lKey]["All"]["1stIn%"]) < 10):
+                l_1st_in = (len(players[lKey]["All"]["1stIn%"]) * np.average(players[lKey]["All"]["1stIn%"]) + (10 - len(players[lKey]["All"]["1stIn%"])) * naiveIn1) / 10
+                l_2nd_in = (len(players[lKey]["All"]["2ndIn%"]) * np.average(players[lKey]["All"]["2ndIn%"]) + (10 - len(players[lKey]["All"]["2ndIn%"])) * naiveIn2) / 10
+                l_1st_win = (len(players[lKey]["All"]["1stWin%"]) * np.average(players[lKey]["All"]["1stWin%"]) + (10 - len(players[lKey]["All"]["1stWin%"])) * naiveWin1) / 10
+                l_2nd_win = (len(players[lKey]["All"]["2ndWin%"]) * np.average(players[lKey]["All"]["2ndWin%"]) + (10 - len(players[lKey]["All"]["2ndWin%"])) * naiveWin2) / 10
+                l_1st_def = (len(players[lKey]["All"]["Def1st%"]) * np.average(players[lKey]["All"]["Def1st%"]) - (10 - len(players[lKey]["All"]["Def1st%"])) * naiveWin1) / 10
+                l_2nd_def = (len(players[lKey]["All"]["Def2nd%"]) * np.average(players[lKey]["All"]["Def2nd%"]) - (10 - len(players[lKey]["All"]["Def2nd%"])) * naiveWin2) / 10
+                l_adj_1st_win = (len(players[lKey]["All"]["1stWin%Adj"]) * np.average(players[lKey]["All"]["1stWin%Adj"]) + (10 - len(players[lKey]["All"]["1stWin%Adj"])) * newWin1) / 10
+                l_adj_2nd_win = (len(players[lKey]["All"]["2ndWin%Adj"]) * np.average(players[lKey]["All"]["2ndWin%Adj"]) + (10 - len(players[lKey]["All"]["2ndWin%Adj"])) * newWin2) / 10
+                l_adj_1st_def = (len(players[lKey]["All"]["Def1st%Adj"]) * np.average(players[lKey]["All"]["Def1st%Adj"]) - (10 - len(players[lKey]["All"]["Def1st%Adj"])) * newDef1) / 10
+                l_adj_2nd_def = (len(players[lKey]["All"]["Def2nd%Adj"]) * np.average(players[lKey]["All"]["Def2nd%Adj"]) - (10 - len(players[lKey]["All"]["Def2nd%Adj"])) * newDef2) / 10
+            else:
+                l_1st_in = np.average(players[lKey]["All"]["1stIn%"])
+                l_2nd_in = np.average(players[lKey]["All"]["2ndIn%"])
+                l_1st_win = np.average(players[lKey]["All"]["1stWin%"])
+                l_2nd_win = np.average(players[lKey]["All"]["2ndWin%"])
+                l_1st_def = np.average(players[lKey]["All"]["Def1st%"])
+                l_2nd_def = np.average(players[lKey]["All"]["Def2nd%"])
+                l_adj_1st_win = np.average(players[lKey]["All"]["1stWin%Adj"])
+                l_adj_2nd_win = np.average(players[lKey]["All"]["2ndWin%Adj"])
+                l_adj_1st_def = np.average(players[lKey]["All"]["Def1st%Adj"])
+                l_adj_2nd_def = np.average(players[lKey]["All"]["Def2nd%Adj"])
+            if (len(players[lKey][row["Surface"]]["1stWin%Adj"]) > 10):
+                l_surf_adj_1st_win = np.average(players[lKey][row["Surface"]]["1stWin%Adj"])
+                l_surf_adj_2nd_win = np.average(players[lKey][row["Surface"]]["2ndWin%Adj"])
+                l_surf_adj_1st_def = np.average(players[lKey][row["Surface"]]["Def1st%Adj"])
+                l_surf_adj_2nd_def = np.average(players[lKey][row["Surface"]]["Def2nd%Adj"])
+            elif (len(players[lKey][row["Surface"]]["1stWin%Adj"]) > 0):
+                l_surf_adj_1st_win = (len(players[lKey][row["Surface"]]["1stWin%Adj"]) * np.average(players[lKey][row["Surface"]]["1stWin%Adj"]) + (10 - len(players[lKey][row["Surface"]]["1stWin%Adj"])) * newWin1) / 10
+                l_surf_adj_2nd_win = (len(players[lKey][row["Surface"]]["2ndWin%Adj"]) * np.average(players[lKey][row["Surface"]]["2ndWin%Adj"]) + (10 - len(players[lKey][row["Surface"]]["2ndWin%Adj"])) * newWin2) / 10
+                l_surf_adj_1st_def = (len(players[lKey][row["Surface"]]["Def1st%Adj"]) * np.average(players[lKey][row["Surface"]]["Def1st%Adj"]) - (10 - len(players[lKey][row["Surface"]]["Def1st%Adj"])) * newDef1) / 10
+                l_surf_adj_2nd_def = (len(players[lKey][row["Surface"]]["Def2nd%Adj"]) * np.average(players[lKey][row["Surface"]]["Def2nd%Adj"]) - (10 - len(players[lKey][row["Surface"]]["Def2nd%Adj"])) * newDef2) / 10
+            else:
+                l_surf_adj_1st_win = newWin1
+                l_surf_adj_2nd_win = newWin2
+                l_surf_adj_1st_def = newDef1
+                l_surf_adj_2nd_def = newDef2
 
             dict["w_expected_1stServePoint%"].append(w_1st_in * (w_1st_win + l_1st_def) / 2)
             dict["w_expected_2ndServePoint%"].append(w_2nd_in * (w_2nd_win + l_2nd_def) / 2)
@@ -202,6 +296,12 @@ def pre_match_stats():
             dict["w_adj_expected_2ndServePoint%"].append(w_2nd_in * (w_adj_2nd_win + l_adj_2nd_def))
             dict["l_adj_expected_1stServePoint%"].append(l_1st_in * (l_adj_1st_win + w_adj_1st_def))
             dict["l_adj_expected_2ndServePoint%"].append(l_2nd_in * (l_adj_2nd_win + w_adj_2nd_def))
+            dict["w_surf_adj_expected_1stServePoint%"].append(w_1st_in * (w_surf_adj_1st_win + l_surf_adj_1st_def))
+            dict["w_surf_adj_expected_2ndServePoint%"].append(w_2nd_in * (w_surf_adj_2nd_win + l_surf_adj_2nd_def))
+            dict["l_surf_adj_expected_1stServePoint%"].append(l_1st_in * (l_surf_adj_1st_win + w_surf_adj_1st_def))
+            dict["l_surf_adj_expected_2ndServePoint%"].append(l_2nd_in * (l_surf_adj_2nd_win + w_surf_adj_2nd_def))
+            dict["w_gp"].append(len(players[wKey]["All"]["1stIn%"]))
+            dict["l_gp"].append(len(players[lKey]["All"]["1stIn%"]))
         else:
             if (not wFound):
                 print (hp.cleanBetName(row["Winner"]))
@@ -215,6 +315,12 @@ def pre_match_stats():
             dict["w_adj_expected_2ndServePoint%"].append(np.nan)
             dict["l_adj_expected_1stServePoint%"].append(np.nan)
             dict["l_adj_expected_2ndServePoint%"].append(np.nan)
+            dict["w_surf_adj_expected_1stServePoint%"].append(np.nan)
+            dict["w_surf_adj_expected_2ndServePoint%"].append(np.nan)
+            dict["l_surf_adj_expected_1stServePoint%"].append(np.nan)
+            dict["l_surf_adj_expected_2ndServePoint%"].append(np.nan)
+            dict["w_gp"].append(np.nan)
+            dict["l_gp"].append(np.nan)
         if (not wFound):
             name = hp.cleanBetName(row["Winner"])[0] + " "
             for letter in hp.cleanBetName(row["Winner"])[1]:
@@ -222,7 +328,9 @@ def pre_match_stats():
                     break
                 name = name + letter + "."
             wKey = name
-            players[wKey] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
+            players[wKey] = {}
+            for surface in ["All", "Hard", "Clay", "Grass", "Carpet"]:
+                players[wKey][surface] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
         if (not lFound):
             name = hp.cleanBetName(row["Loser"])[0] + " "
             for letter in hp.cleanBetName(row["Loser"])[1]:
@@ -230,43 +338,101 @@ def pre_match_stats():
                     break
                 name = name + letter + "."
             lKey = name
-            players[lKey] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
+            players[lKey] = {}
+            for surface in ["All", "Hard", "Clay", "Grass", "Carpet"]:
+                players[lKey][surface] = {"1stWin%":[],"1stIn%":[],"2ndWin%":[],"2ndIn%":[],"Def1st%":[],"Def2nd%":[],"1stWin%Adj":[],"2ndWin%Adj":[],"Def1st%Adj":[],"Def2nd%Adj":[]}
         if (row["w_svpt"] > 20 and row["l_svpt"] > 20 and row["w_svpt"] - row["w_1stIn"] - row["w_df"] > 0 and row["l_svpt"] - row["l_1stIn"] - row["l_df"] > 0):
-            if (len(players[lKey]["1stWin%"]) > 0):
-                players[wKey]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - ((np.average(players[lKey]["Def1st%"]) - win1avg) / win1std))
-                players[wKey]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - ((np.average(players[lKey]["Def2nd%"]) - win2avg) / win2std))
-                players[wKey]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - ((np.average(players[lKey]["1stWin%"]) - win1avg) / win1std))
-                players[wKey]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - ((np.average(players[lKey]["2ndWin%"]) - win2avg) / win2std))
+            nAll = len(players[lKey]["All"]["1stWin%"])
+            nSurf = len(players[lKey][row["Surface"]]["1stWin%Adj"])
+            if (nAll > 10):
+                players[wKey]["All"]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - np.average(players[lKey]["All"]["Def1st%Adj"]))
+                players[wKey]["All"]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - np.average(players[lKey]["All"]["Def2nd%Adj"]))
+                players[wKey]["All"]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - np.average(players[lKey]["All"]["1stWin%Adj"]))
+                players[wKey]["All"]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - np.average(players[lKey]["All"]["2ndWin%Adj"]))
+            elif (nAll > 0):
+                players[wKey]["All"]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - ((nAll * np.average(players[lKey]["All"]["Def1st%Adj"])) + (10 - nAll) * newDef1) / 10)
+                players[wKey]["All"]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - ((nAll * np.average(players[lKey]["All"]["Def2nd%Adj"])) + (10 - nAll) * newDef2) / 10)
+                players[wKey]["All"]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - ((nAll * np.average(players[lKey]["All"]["1stWin%Adj"])) + (10 - nAll) * newWin1) / 10)
+                players[wKey]["All"]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - ((nAll * np.average(players[lKey]["All"]["2ndWin%Adj"])) + (10 - nAll) * newWin2) / 10)
             else:
-                players[wKey]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std))
-                players[wKey]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std))
-                players[wKey]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std))
-                players[wKey]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std))
-
-            if (len(players[wKey]["1stWin%"]) > 0):
-                players[lKey]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - ((np.average(players[wKey]["Def1st%"]) - win1avg) / win1std))
-                players[lKey]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - ((np.average(players[wKey]["Def2nd%"]) - win2avg) / win2std))
-                players[lKey]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - ((np.average(players[wKey]["1stWin%"]) - win1avg) / win1std))
-                players[lKey]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - ((np.average(players[wKey]["2ndWin%"]) - win2avg) / win2std))
+                players[wKey]["All"]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - newDef1)
+                players[wKey]["All"]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - newDef1)
+                players[wKey]["All"]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) + newWin1)
+                players[wKey]["All"]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) + newWin2)
+            if (nSurf > 10):
+                players[wKey][row["Surface"]]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - np.average(players[lKey][row["Surface"]]["Def1st%Adj"]))
+                players[wKey][row["Surface"]]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - np.average(players[lKey][row["Surface"]]["Def2nd%Adj"]))
+                players[wKey][row["Surface"]]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - np.average(players[lKey][row["Surface"]]["1stWin%Adj"]))
+                players[wKey][row["Surface"]]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - np.average(players[lKey][row["Surface"]]["2ndWin%Adj"]))
+            elif (nSurf > 0):
+                players[wKey][row["Surface"]]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - ((nSurf * np.average(players[lKey][row["Surface"]]["Def1st%Adj"])) + (10 - nSurf) * newDef1) / 10)
+                players[wKey][row["Surface"]]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - ((nSurf * np.average(players[lKey][row["Surface"]]["Def2nd%Adj"])) + (10 - nSurf) * newDef2) / 10)
+                players[wKey][row["Surface"]]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) - ((nSurf * np.average(players[lKey][row["Surface"]]["1stWin%Adj"])) + (10 - nSurf) * newWin1) / 10)
+                players[wKey][row["Surface"]]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) - ((nSurf * np.average(players[lKey][row["Surface"]]["2ndWin%Adj"])) + (10 - nSurf) * newWin2) / 10)
             else:
-                players[lKey]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std))
-                players[lKey]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std))
-                players[lKey]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std))
-                players[lKey]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std))
+                players[wKey][row["Surface"]]["1stWin%Adj"].append(((row["w_1stWon"] / row["w_1stIn"] - win1avg) / win1std) - newDef1)
+                players[wKey][row["Surface"]]["2ndWin%Adj"].append(((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]) - win2avg) / win2std) - newDef2)
+                players[wKey][row["Surface"]]["Def1st%Adj"].append((((row["l_1stWon"] / row["l_1stIn"]) - win1avg) / win1std) + newWin1)
+                players[wKey][row["Surface"]]["Def2nd%Adj"].append((((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])) - win2avg) / win2std) + newWin2)
 
-            players[wKey]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
-            players[wKey]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
-            players[wKey]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
-            players[wKey]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
-            players[wKey]["Def1st%"].append((row["l_1stWon"] / row["l_1stIn"]))
-            players[wKey]["Def2nd%"].append((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
+            nAll = len(players[wKey]["All"]["1stWin%"])
+            nSurf = len(players[wKey][row["Surface"]]["1stWin%Adj"])
+            if (nAll > 10):
+                players[lKey]["All"]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - np.average(players[wKey]["All"]["Def1st%Adj"]))
+                players[lKey]["All"]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - np.average(players[wKey]["All"]["Def2nd%Adj"]))
+                players[lKey]["All"]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - np.average(players[wKey]["All"]["1stWin%Adj"]))
+                players[lKey]["All"]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - np.average(players[wKey]["All"]["2ndWin%Adj"]))
+            elif (nAll > 0):
+                players[lKey]["All"]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - ((nAll * np.average(players[wKey]["All"]["Def1st%Adj"])) + (10 - nAll) * newDef1) / 10)
+                players[lKey]["All"]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - ((nAll * np.average(players[wKey]["All"]["Def2nd%Adj"])) + (10 - nAll) * newDef2) / 10)
+                players[lKey]["All"]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - ((nAll * np.average(players[wKey]["All"]["1stWin%Adj"])) + (10 - nAll) * newWin1) / 10)
+                players[lKey]["All"]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - ((nAll * np.average(players[wKey]["All"]["2ndWin%Adj"])) + (10 - nAll) * newWin2) / 10)
+            else:
+                players[lKey]["All"]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - newDef1)
+                players[lKey]["All"]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - newDef2)
+                players[lKey]["All"]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) + newWin1)
+                players[lKey]["All"]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) + newWin2)
+            if (nSurf > 10):
+                players[lKey][row["Surface"]]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - np.average(players[wKey][row["Surface"]]["Def1st%Adj"]))
+                players[lKey][row["Surface"]]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - np.average(players[wKey][row["Surface"]]["Def2nd%Adj"]))
+                players[lKey][row["Surface"]]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - np.average(players[wKey][row["Surface"]]["1stWin%Adj"]))
+                players[lKey][row["Surface"]]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - np.average(players[wKey][row["Surface"]]["2ndWin%Adj"]))
+            elif (nSurf > 0):
+                players[lKey][row["Surface"]]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - ((nSurf * np.average(players[wKey][row["Surface"]]["Def1st%Adj"])) + (10 - nSurf) * newDef1) / 10)
+                players[lKey][row["Surface"]]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - ((nSurf * np.average(players[wKey][row["Surface"]]["Def2nd%Adj"])) + (10 - nSurf) * newDef2) / 10)
+                players[lKey][row["Surface"]]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) - ((nSurf * np.average(players[wKey][row["Surface"]]["1stWin%Adj"])) + (10 - nSurf) * newWin1) / 10)
+                players[lKey][row["Surface"]]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) - ((nSurf * np.average(players[wKey][row["Surface"]]["2ndWin%Adj"])) + (10 - nSurf) * newWin2) / 10)
+            else:
+                players[lKey][row["Surface"]]["1stWin%Adj"].append(((row["l_1stWon"] / row["l_1stIn"] - win1avg) / win1std) - newDef1)
+                players[lKey][row["Surface"]]["2ndWin%Adj"].append(((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]) - win2avg) / win2std) - newDef2)
+                players[lKey][row["Surface"]]["Def1st%Adj"].append((((row["w_1stWon"] / row["w_1stIn"]) - win1avg) / win1std) + newWin1)
+                players[lKey][row["Surface"]]["Def2nd%Adj"].append((((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])) - win2avg) / win2std) + newWin2)
 
-            players[lKey]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
-            players[lKey]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
-            players[lKey]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
-            players[lKey]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
-            players[lKey]["Def1st%"].append((row["w_1stWon"] / row["w_1stIn"]))
-            players[lKey]["Def2nd%"].append((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
+            players[wKey]["All"]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
+            players[wKey]["All"]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
+            players[wKey]["All"]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
+            players[wKey]["All"]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
+            players[wKey]["All"]["Def1st%"].append((row["l_1stWon"] / row["l_1stIn"]))
+            players[wKey]["All"]["Def2nd%"].append((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
+            # players[wKey][row["Surface"]]["1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
+            # players[wKey][row["Surface"]]["1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
+            # players[wKey][row["Surface"]]["2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
+            # players[wKey][row["Surface"]]["2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
+            # players[wKey][row["Surface"]]["Def1st%"].append((row["l_1stWon"] / row["l_1stIn"]))
+            # players[wKey][row["Surface"]]["Def2nd%"].append((row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"])))
+
+            players[lKey]["All"]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
+            players[lKey]["All"]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
+            players[lKey]["All"]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
+            players[lKey]["All"]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
+            players[lKey]["All"]["Def1st%"].append((row["w_1stWon"] / row["w_1stIn"]))
+            players[lKey]["All"]["Def2nd%"].append((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
+            # players[lKey][row["Surface"]]["1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
+            # players[lKey][row["Surface"]]["1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
+            # players[lKey][row["Surface"]]["2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
+            # players[lKey][row["Surface"]]["2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
+            # players[lKey][row["Surface"]]["Def1st%"].append((row["w_1stWon"] / row["w_1stIn"]))
+            # players[lKey][row["Surface"]]["Def2nd%"].append((row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"])))
     df = pd.DataFrame.from_dict(dict)
     df.to_csv("./csv_data/preMatchExpectations.csv", index = False)
 
@@ -285,11 +451,11 @@ def train_test_split(splitYear = 2015):
     data.iloc[trainRows].to_csv("./csv_data/preMatchExpectations_train.csv", index = False)
     data.iloc[testRows].to_csv("./csv_data/preMatchExpectations_test.csv", index = False)
 
-def logistic_regression():
-    train = pd.read_csv("./csv_data/preMatchExpectations_train.csv", encoding = "ISO-8859-1")
-    test = pd.read_csv("./csv_data/preMatchExpectations_test.csv", encoding = "ISO-8859-1")
+def logistic_regression(path="./csv_data/"):
+    train = pd.read_csv(path + "preMatchExpectations_train.csv", encoding = "ISO-8859-1")
+    test = pd.read_csv(path + "preMatchExpectations_test.csv", encoding = "ISO-8859-1")
 
-    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
+    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "p1_surf_adj_expected_1stServePoint%":[], "p1_surf_adj_expected_2ndServePoint%":[], "p2_surf_adj_expected_1stServePoint%":[], "p2_surf_adj_expected_2ndServePoint%":[], "P1 G":[], "P2 G":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
 
     for index, row in train.iterrows():
         num = random.randint(0,1)
@@ -304,6 +470,12 @@ def logistic_regression():
             dict["p1_adj_expected_2ndServePoint%"].append(row["w_adj_expected_2ndServePoint%"])
             dict["p2_adj_expected_1stServePoint%"].append(row["l_adj_expected_1stServePoint%"])
             dict["p2_adj_expected_2ndServePoint%"].append(row["l_adj_expected_2ndServePoint%"])
+            dict["p1_surf_adj_expected_1stServePoint%"].append(row["w_surf_adj_expected_1stServePoint%"])
+            dict["p1_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
+            dict["p2_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
+            dict["p2_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
+            dict["P1 G"].append("w_gp")
+            dict["P2 G"].append("l_gp")
             dict["Player 1 Odds"].append(row["PSW"])
             dict["Player 2 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(1)
@@ -318,13 +490,19 @@ def logistic_regression():
             dict["p2_adj_expected_2ndServePoint%"].append(row["w_adj_expected_2ndServePoint%"])
             dict["p1_adj_expected_1stServePoint%"].append(row["l_adj_expected_1stServePoint%"])
             dict["p1_adj_expected_2ndServePoint%"].append(row["l_adj_expected_2ndServePoint%"])
+            dict["p2_surf_adj_expected_1stServePoint%"].append(row["w_surf_adj_expected_1stServePoint%"])
+            dict["p2_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
+            dict["p1_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
+            dict["p1_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
+            dict["P1 G"].append("l_gp")
+            dict["P2 G"].append("w_gp")
             dict["Player 2 Odds"].append(row["PSW"])
             dict["Player 1 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(0)
     for key in dict:
         train[key] = dict[key]
 
-    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
+    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "p1_surf_adj_expected_1stServePoint%":[], "p1_surf_adj_expected_2ndServePoint%":[], "p2_surf_adj_expected_1stServePoint%":[], "p2_surf_adj_expected_2ndServePoint%":[], "P1 G":[], "P2 G":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
 
     for index, row in test.iterrows():
         num = random.randint(0,1)
@@ -339,6 +517,12 @@ def logistic_regression():
             dict["p1_adj_expected_2ndServePoint%"].append(row["w_adj_expected_2ndServePoint%"])
             dict["p2_adj_expected_1stServePoint%"].append(row["l_adj_expected_1stServePoint%"])
             dict["p2_adj_expected_2ndServePoint%"].append(row["l_adj_expected_2ndServePoint%"])
+            dict["p1_surf_adj_expected_1stServePoint%"].append(row["w_surf_adj_expected_1stServePoint%"])
+            dict["p1_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
+            dict["p2_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
+            dict["p2_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
+            dict["P1 G"].append(row["w_gp"])
+            dict["P2 G"].append(row["l_gp"])
             dict["Player 1 Odds"].append(row["PSW"])
             dict["Player 2 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(1)
@@ -353,6 +537,12 @@ def logistic_regression():
             dict["p2_adj_expected_2ndServePoint%"].append(row["w_adj_expected_2ndServePoint%"])
             dict["p1_adj_expected_1stServePoint%"].append(row["l_adj_expected_1stServePoint%"])
             dict["p1_adj_expected_2ndServePoint%"].append(row["l_adj_expected_2ndServePoint%"])
+            dict["p2_surf_adj_expected_1stServePoint%"].append(row["w_surf_adj_expected_1stServePoint%"])
+            dict["p2_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
+            dict["p1_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
+            dict["p1_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
+            dict["P1 G"].append(row["l_gp"])
+            dict["P2 G"].append(row["w_gp"])
             dict["Player 2 Odds"].append(row["PSW"])
             dict["Player 1 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(0)
@@ -361,7 +551,7 @@ def logistic_regression():
 
     predictions = []
     y_train = train["Player 1 Win"]
-    xCols = ["p1_expected_1stServePoint%", "p1_expected_2ndServePoint%", "p2_expected_1stServePoint%", "p2_expected_2ndServePoint%", "p1_adj_expected_1stServePoint%", "p1_adj_expected_2ndServePoint%", "p2_adj_expected_1stServePoint%", "p2_adj_expected_2ndServePoint%"]
+    xCols = ["p1_expected_1stServePoint%", "p1_expected_2ndServePoint%", "p2_expected_1stServePoint%", "p2_expected_2ndServePoint%", "p1_adj_expected_1stServePoint%", "p1_adj_expected_2ndServePoint%", "p2_adj_expected_1stServePoint%", "p2_adj_expected_2ndServePoint%", "p1_surf_adj_expected_1stServePoint%", "p1_surf_adj_expected_2ndServePoint%", "p2_surf_adj_expected_1stServePoint%", "p2_surf_adj_expected_2ndServePoint%"]
     scaler = StandardScaler()
     X_train = pd.DataFrame(train, columns = xCols)
     X_train[xCols] = scaler.fit_transform(X_train[xCols])
@@ -377,4 +567,4 @@ def logistic_regression():
     test["Player 1 Prob"] = predictions
 
 
-    test.to_csv("./csv_data/predictions.csv", index = False)
+    test.to_csv(path + "predictions2.csv", index = False)

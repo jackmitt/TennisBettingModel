@@ -1,0 +1,1 @@
+All stats - adjusted new players stats: -0.1 std from the mean as the default
