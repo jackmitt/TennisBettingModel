@@ -1,1 +1,0 @@
-created newWin1, newWin2, newDef1, newDef2 - default point estimates for how well new players do (n < 10), instead of assuming average

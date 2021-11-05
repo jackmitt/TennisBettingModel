@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-data = read.csv("C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/3.0/predictions.csv")
+data = read.csv("C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/3.4/predictions.csv")
 
 ah = data %>% select(Player.1.Win, Player.1.Prob) %>% drop_na() %>% arrange(Player.1.Prob)
 
@@ -86,4 +86,4 @@ n = c(length(edge$Actual.Edge[one]),length(edge$Actual.Edge[two]),length(edge$Ac
 edgedf = data.frame(expectedEdge,actualEdge,n)
 
 
-ggplot(edgedf, aes(y=actualEdge, x=expectedEdge, color = n, size = n)) + geom_point() + geom_abline(slope=0, intercept=0, col = 'red') + geom_abline(slope=1, intercept=0) + xlim(0,0.5) + ylim(-0.2,0.2)
+ggplot(edgedf, aes(y=actualEdge, x=expectedEdge, color = n, size = n)) + geom_point() + geom_abline(slope=0, intercept=0, col = 'red') + geom_abline(slope=1, intercept=0) + xlim(0,0.05) + ylim(-0.2,0.2)
