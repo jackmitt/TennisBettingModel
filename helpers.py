@@ -48,5 +48,5 @@ def cleanBetName(lastF):
     bLast = bLast.replace("'", "")
     return (bLast, bFirstLetter)
 
-def bayesianAdjust(prior, support):
-    return ((len(prior) * np.average(prior) + len(support) * np.average(support)) / (len(prior) + len(support)))
+def logit(pct):
+    return (-np.log(1/(pct) - 1))

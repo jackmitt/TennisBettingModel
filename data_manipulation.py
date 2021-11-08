@@ -444,9 +444,9 @@ def train_test_split(splitYear = 2015, path="./csv_data/"):
     for index, row in data.iterrows():
         if (int(row["Date"].split("/")[2]) == splitYear):
             test = True
-        if (test and not np.isnan(row["w_expected_1stServePoint%"]) and row["Comment"] == "Completed" and not np.isnan(row["PSW"])):
+        if (test and not np.isnan(row["w_expected_1stServePoint%"]) and row["Comment"] == "Completed"):
             testRows.append(index)
-        elif (not test and not np.isnan(row["w_expected_1stServePoint%"]) and row["Comment"] == "Completed" and not np.isnan(row["PSW"])):
+        elif (not test and not np.isnan(row["w_expected_1stServePoint%"]) and row["Comment"] == "Completed"):
             trainRows.append(index)
     data.iloc[trainRows].to_csv(path + "preMatchExpectations_train.csv", index = False)
     data.iloc[testRows].to_csv(path + "preMatchExpectations_test.csv", index = False)
@@ -455,7 +455,7 @@ def logistic_regression(path="./csv_data/"):
     train = pd.read_csv(path + "preMatchExpectations_train.csv", encoding = "ISO-8859-1")
     test = pd.read_csv(path + "preMatchExpectations_test.csv", encoding = "ISO-8859-1")
 
-    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "p1_surf_adj_expected_1stServePoint%":[], "p1_surf_adj_expected_2ndServePoint%":[], "p2_surf_adj_expected_1stServePoint%":[], "p2_surf_adj_expected_2ndServePoint%":[], "P1 G":[], "P2 G":[], "Book Rtg":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
+    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "p1_surf_adj_expected_1stServePoint%":[], "p1_surf_adj_expected_2ndServePoint%":[], "p2_surf_adj_expected_1stServePoint%":[], "p2_surf_adj_expected_2ndServePoint%":[], "P1 G":[], "P2 G":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
 
     for index, row in train.iterrows():
         num = random.randint(0,1)
@@ -474,10 +474,10 @@ def logistic_regression(path="./csv_data/"):
             dict["p1_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
             dict["p2_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
             dict["p2_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
-            if (row["PSW"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSW"]) - 1))
-            else:
-                dict["Book Rtg"].append(10)
+            # if (row["PSW"] > 1):
+            #     dict["Book Rtg"].append(-np.log(1/(1/row["PSW"]) - 1))
+            # else:
+            #     dict["Book Rtg"].append(10)
             dict["P1 G"].append("w_gp")
             dict["P2 G"].append("l_gp")
             dict["Player 1 Odds"].append(row["PSW"])
@@ -498,10 +498,10 @@ def logistic_regression(path="./csv_data/"):
             dict["p2_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
             dict["p1_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
             dict["p1_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
-            if (row["PSL"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSL"]) - 1))
-            else:
-                dict["Book Rtg"].append(10)
+            # if (row["PSL"] > 1):
+            #     dict["Book Rtg"].append(-np.log(1/(1/row["PSL"]) - 1))
+            # else:
+            #     dict["Book Rtg"].append(10)
             dict["P1 G"].append("l_gp")
             dict["P2 G"].append("w_gp")
             dict["Player 2 Odds"].append(row["PSW"])
@@ -510,7 +510,7 @@ def logistic_regression(path="./csv_data/"):
     for key in dict:
         train[key] = dict[key]
 
-    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "p1_surf_adj_expected_1stServePoint%":[], "p1_surf_adj_expected_2ndServePoint%":[], "p2_surf_adj_expected_1stServePoint%":[], "p2_surf_adj_expected_2ndServePoint%":[], "P1 G":[], "P2 G":[], "Book Rtg":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
+    dict = {"Player 1":[], "Player 2":[], "p1_expected_1stServePoint%":[], "p1_expected_2ndServePoint%":[], "p2_expected_1stServePoint%":[], "p2_expected_2ndServePoint%":[], "p1_adj_expected_1stServePoint%":[], "p1_adj_expected_2ndServePoint%":[], "p2_adj_expected_1stServePoint%":[], "p2_adj_expected_2ndServePoint%":[], "p1_surf_adj_expected_1stServePoint%":[], "p1_surf_adj_expected_2ndServePoint%":[], "p2_surf_adj_expected_1stServePoint%":[], "p2_surf_adj_expected_2ndServePoint%":[], "P1 G":[], "P2 G":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
 
     for index, row in test.iterrows():
         num = random.randint(0,1)
@@ -529,10 +529,10 @@ def logistic_regression(path="./csv_data/"):
             dict["p1_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
             dict["p2_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
             dict["p2_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
-            if (row["PSW"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSW"]) - 1))
-            else:
-                dict["Book Rtg"].append(10)
+            # if (row["PSW"] > 1):
+            #     dict["Book Rtg"].append(-np.log(1/(1/row["PSW"]) - 1))
+            # else:
+            #     dict["Book Rtg"].append(10)
             dict["P1 G"].append(row["w_gp"])
             dict["P2 G"].append(row["l_gp"])
             dict["Player 1 Odds"].append(row["PSW"])
@@ -553,10 +553,10 @@ def logistic_regression(path="./csv_data/"):
             dict["p2_surf_adj_expected_2ndServePoint%"].append(row["w_surf_adj_expected_2ndServePoint%"])
             dict["p1_surf_adj_expected_1stServePoint%"].append(row["l_surf_adj_expected_1stServePoint%"])
             dict["p1_surf_adj_expected_2ndServePoint%"].append(row["l_surf_adj_expected_2ndServePoint%"])
-            if (row["PSL"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSL"]) - 1))
-            else:
-                dict["Book Rtg"].append(10)
+            # if (row["PSL"] > 1):
+            #     dict["Book Rtg"].append(-np.log(1/(1/row["PSL"]) - 1))
+            # else:
+            #     dict["Book Rtg"].append(10)
             dict["P1 G"].append(row["l_gp"])
             dict["P2 G"].append(row["w_gp"])
             dict["Player 2 Odds"].append(row["PSW"])
@@ -567,7 +567,7 @@ def logistic_regression(path="./csv_data/"):
 
     predictions = []
     y_train = train["Player 1 Win"]
-    xCols = ["p1_expected_1stServePoint%", "p1_expected_2ndServePoint%", "p2_expected_1stServePoint%", "p2_expected_2ndServePoint%", "p1_adj_expected_1stServePoint%", "p1_adj_expected_2ndServePoint%", "p2_adj_expected_1stServePoint%", "p2_adj_expected_2ndServePoint%", "p1_surf_adj_expected_1stServePoint%", "p1_surf_adj_expected_2ndServePoint%", "p2_surf_adj_expected_1stServePoint%", "p2_surf_adj_expected_2ndServePoint%", "Book Rtg"]
+    xCols = ["p1_expected_1stServePoint%", "p1_expected_2ndServePoint%", "p2_expected_1stServePoint%", "p2_expected_2ndServePoint%", "p1_adj_expected_1stServePoint%", "p1_adj_expected_2ndServePoint%", "p2_adj_expected_1stServePoint%", "p2_adj_expected_2ndServePoint%", "p1_surf_adj_expected_1stServePoint%", "p1_surf_adj_expected_2ndServePoint%", "p2_surf_adj_expected_1stServePoint%", "p2_surf_adj_expected_2ndServePoint%"]
     scaler = StandardScaler()
     X_train = pd.DataFrame(train, columns = xCols)
     X_train[xCols] = scaler.fit_transform(X_train[xCols])
