@@ -11,10 +11,8 @@ def simulateKellyBets(bankroll, kellyDiv = 1, pred_path = "./csv_data/prediction
     netSum = 0
     myEdge = []
     actEdge = []
-    totalBets = 0
     for index, row in pred.iterrows():
         if (row["Player 1 Prob"] > 1 / row["Player 1 Odds"]):
-            totalBets += 1
             myEdge.append(row["Player 1 Prob"] - 1 / row["Player 1 Odds"])
             actEdge.append(row["Player 1 Win"] - 1 / row["Player 1 Odds"])
             if (row["Player 1 Win"] == 1):
@@ -24,7 +22,6 @@ def simulateKellyBets(bankroll, kellyDiv = 1, pred_path = "./csv_data/prediction
                 bankroll -= bankroll * kellyStake(row["Player 1 Prob"], row["Player 1 Odds"]) / kellyDiv
                 netSum -= baseBR * kellyStake(row["Player 1 Prob"], row["Player 1 Odds"]) / kellyDiv
         elif (1 - row["Player 1 Prob"] > 1 / row["Player 2 Odds"]):
-            totalBets += 1
             myEdge.append(1 - row["Player 1 Prob"] - 1 / row["Player 2 Odds"])
             actEdge.append(1 - row["Player 1 Win"] - 1 / row["Player 2 Odds"])
             if (row["Player 1 Win"] == 0):
@@ -40,7 +37,7 @@ def simulateKellyBets(bankroll, kellyDiv = 1, pred_path = "./csv_data/prediction
     pred["My Edge"] = myEdge
     pred["Actual Edge"] = actEdge
     pred.to_csv(pred_path, index = False)
-    print(netSum, totalBets, netSum / totalBets)
+    print(netSum)
 
 def simulateFixedBets(bankroll, pred_path = "./csv_data/predictions.csv"):
     pred = pd.read_csv(pred_path, encoding = "ISO-8859-1")
