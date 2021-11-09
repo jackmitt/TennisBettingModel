@@ -1,0 +1,1 @@
+using Book Rtg like 3.4, but doing the "cfbbettingmodel" method of transforming the features to be more related to the residuals (AKA betting edge in this case) between Book Rtg and Player 1 Win 
