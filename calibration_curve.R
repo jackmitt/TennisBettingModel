@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-data = read.csv("C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/4.0/predictions.csv")
+data = read.csv("C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/4.2/predictions.csv")
 
 ah = data %>% select(Player.1.Win, Player.1.Prob) %>% drop_na() %>% arrange(Player.1.Prob)
 
@@ -39,7 +39,7 @@ actualRate = c(mean(ah$Player.1.Win[one]),mean(ah$Player.1.Win[two]),mean(ah$Pla
 n = c(length(ah$Player.1.Win[one]),length(ah$Player.1.Win[two]),length(ah$Player.1.Win[three]),length(ah$Player.1.Win[four]),length(ah$Player.1.Win[five]),length(ah$Player.1.Win[six]),length(ah$Player.1.Win[seven]),length(ah$Player.1.Win[eight]),length(ah$Player.1.Win[nine]),length(ah$Player.1.Win[ten]),length(ah$Player.1.Win[eleven]),length(ah$Player.1.Win[twelve]))
 ahdf = data.frame(predictedRate,actualRate,n)
 
-png(file="C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/4.0/Calibration_Curve.png")
+png(file="C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/4.2/Calibration_Curve.png")
 ggplot(ahdf, aes(y=actualRate, x=predictedRate, color = n, size = n)) + geom_point() + geom_abline(slope=1, intercept=0) + xlim(0,1) + ylim(0,1)
 dev.off()
 
@@ -85,6 +85,6 @@ actualEdge = c(mean(edge$Actual.Edge[one]),mean(edge$Actual.Edge[two]),mean(edge
 n = c(length(edge$Actual.Edge[one]),length(edge$Actual.Edge[two]),length(edge$Actual.Edge[three]),length(edge$Actual.Edge[four]),length(edge$Actual.Edge[five]),length(edge$Actual.Edge[six]),length(edge$Actual.Edge[seven]),length(edge$Actual.Edge[eight]),length(edge$Actual.Edge[nine]),length(edge$Actual.Edge[ten]),length(edge$Actual.Edge[eleven]),length(edge$Actual.Edge[twelve]))
 edgedf = data.frame(expectedEdge,actualEdge,n)
 
-png(file="C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/4.0/Edge_Graph.png")
-ggplot(edgedf, aes(y=actualEdge, x=expectedEdge, color = n, size = n)) + geom_point() + geom_abline(slope=0, intercept=0, col = 'red') + geom_abline(slope=1, intercept=0) + xlim(0,0.5) + ylim(-0.2,0.2)
+png(file="C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/4.2/Edge_Graph.png")
+ggplot(edgedf, aes(y=actualEdge, x=expectedEdge, color = n, size = n)) + geom_point() + geom_abline(slope=0, intercept=0, col = 'red') + geom_abline(slope=1, intercept=0) + xlim(0,0.05) + ylim(-0.2,0.2)
 dev.off()
