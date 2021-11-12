@@ -94,6 +94,9 @@ if (not exists("./uts_stats.csv")):
         dict[x + "break_pts_ratio"] = []
 else:
     dict = pd.read_csv("./uts_stats.csv", encoding = "ISO-8859-1").to_dict(orient="list")
+    dict["tourney url"] = []
+    for i in range(len(dict["date"])):
+        dict["tourney url"].append(np.nan)
 
 count = 0
 urls = pd.read_csv("./tourney_urls.csv", encoding = "ISO-8859-1").to_dict(orient="list")["urls"]
@@ -139,6 +142,7 @@ for tourney in urls:
         except:
             browser.find_element_by_xpath("//*[@id='matchStatsPopover-" + game + "']/div[3]/div[2]/button").click()
             continue
+        dict["tourney url"].append(game)
         dict["date"].append(soup.find(class_="table table-condensed text-nowrap").find_all("tr")[2].find("td").text)
         dict["tournament"].append(soup.find("h3").get_text())
         dict["level"].append(soup.find(class_="table table-condensed text-nowrap").find_all("tr")[0].find("span").text)
