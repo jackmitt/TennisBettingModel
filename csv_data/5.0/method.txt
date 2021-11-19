@@ -1,0 +1,6 @@
+Made a player class to help simplify pre_match_averages
+Adding in UTS adapted data
+Renamed the old variables and changed calculation to be more intuitive
+Considering all variables for surface and form stats
+Removed adjusted stats
+Just averaging each players stats, not averaging two players expected stats together
