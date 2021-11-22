@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import datetime
+import random
 
 def same_name(betName, statName):
     betName = betName.lower()
@@ -72,8 +73,10 @@ class player:
                 continue
             self.dict[cat + "_1stWin%"].append(row[wl + "_1stWon"] / row[wl + "_1stIn"])
             self.dict[cat + "_1stIn%"].append(row[wl + "_1stIn"] / row[wl + "_svpt"])
+            self.dict[cat + "_1stWin*In%"].append((row[wl + "_1stWon"] / row[wl + "_1stIn"]) * (row[wl + "_1stIn"] / row[wl + "_svpt"]))
             self.dict[cat + "_2ndWin%"].append(row[wl + "_2ndWon"] / (row[wl + "_svpt"] - row[wl + "_1stIn"] - row[wl + "_df"]))
             self.dict[cat + "_2ndIn%"].append((row[wl + "_svpt"] - row[wl + "_1stIn"] - row[wl + "_df"]) / (row[wl + "_svpt"] - row[wl + "_1stIn"]))
+            self.dict[cat + "_2ndWin*In%"].append((row[wl + "_2ndWon"] / (row[wl + "_svpt"] - row[wl + "_1stIn"] - row[wl + "_df"])) * ((row[wl + "_svpt"] - row[wl + "_1stIn"] - row[wl + "_df"]) / (row[wl + "_svpt"] - row[wl + "_1stIn"])))
             self.dict[cat + "_1stRtnWin%"].append(1 - (row[wlT + "_1stWon"] / row[wlT + "_1stIn"]))
             self.dict[cat + "_2ndRtnWin%"].append(1 - (row[wlT + "_2ndWon"] / (row[wlT + "_svpt"] - row[wlT + "_1stIn"] - row[wlT + "_df"])))
             self.dict[cat + "_Ace%"].append(row[wl + "_ace"] / row[wl + "_svpt"])
@@ -120,3 +123,62 @@ class player:
             return (len(dict[self.cats[0] + "_" + self.keys[0]]))
         else:
             return (len(dict[ref + "_" + self.keys[0]]))
+
+def MCMC_game(in1, win1, in2, win2, num_sim = 1000):
+    #states: (0,0), (15,0), (0,15), (30,0), (15,15), (0,30), (40,0), (30,15), (15,30), (0,40), (40,15), (15,40), deuce, adv_server, adv_returner, win_server, win_returner
+    sw = in1 * win1 + (1 - in1) * in2 * (win2)
+    rw = 1 - sw
+    markov_chain = []
+    for i in range(17):
+        markov_chain.append([])
+        for k in range(17):
+            markov_chain[i].append(0)
+    markov_chain[0][1] = sw
+    markov_chain[0][2] = rw
+    markov_chain[1][3] = sw
+    markov_chain[1][4] = rw
+    markov_chain[2][4] = sw
+    markov_chain[2][5] = rw
+    markov_chain[3][6] = sw
+    markov_chain[3][7] = rw
+    markov_chain[4][7] = sw
+    markov_chain[4][8] = rw
+    markov_chain[5][8] = sw
+    markov_chain[5][9] = rw
+    markov_chain[6][15] = sw
+    markov_chain[6][10] = rw
+    markov_chain[7][10] = sw
+    markov_chain[7][12] = rw
+    markov_chain[8][12] = sw
+    markov_chain[8][11] = rw
+    markov_chain[9][11] = sw
+    markov_chain[9][16] = rw
+    markov_chain[10][15] = sw
+    markov_chain[10][13] = rw
+    markov_chain[11][14] = sw
+    markov_chain[11][16] = rw
+    markov_chain[12][13] = sw
+    markov_chain[12][14] = rw
+    markov_chain[13][15] = sw
+    markov_chain[13][12] = rw
+    markov_chain[14][12] = sw
+    markov_chain[14][16] = rw
+    markov_chain[15][15] = 1
+    markov_chain[16][16] = 1
+
+
+    serve_wins = 0
+    for i in range(num_sim):
+        cur_state = 0
+        while (cur_state != 15 and cur_state != 16):
+            rng = random.randint(0, 10000) / 10000
+            total = 0
+            for j in range(17):
+                total += markov_chain[cur_state][j]
+                if (rng < total):
+                    cur_state = j
+                    break
+        if (cur_state == 15):
+            serve_wins += 1
+
+    return (serve_wins / num_sim)

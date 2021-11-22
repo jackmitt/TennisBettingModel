@@ -1,0 +1,2 @@
+From this point on, no longer using closing book line to make predictions
+added interaction term win*in for 1st and 2nd serves

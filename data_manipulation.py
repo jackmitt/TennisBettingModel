@@ -7,6 +7,7 @@ import random
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
+from sklearn.neural_network import MLPClassifier
 
 def assemble_data():
     #combine matches first
@@ -44,7 +45,7 @@ def assemble_data():
     df.to_csv("./csv_data/combined.csv", index = False)
 
 def pre_match_stats(path = "./csv_data/"):
-    keys = ["1stWin%","1stIn%","2ndWin%","2ndIn%","1stRtnWin%","2ndRtnWin%","Ace%","RtnSrv%","AcePer1stIn","Df%","DfPer2ndSrv","1stSrvEff","Def1stSrvEff","SrvRating","OppSrvRating","BpSaved%","BpWon%","RtnRating","OppRtnRating","Date"]
+    keys = ["1stWin%","1stIn%","1stWin*In%","2ndWin%","2ndIn%","2ndWin*In%","1stRtnWin%","2ndRtnWin%","Ace%","RtnSrv%","AcePer1stIn","Df%","DfPer2ndSrv","1stSrvEff","Def1stSrvEff","SrvRating","OppSrvRating","BpSaved%","BpWon%","RtnRating","OppRtnRating","Date"]
     cats = ["lf", "mf", "sf", "hard", "clay", "grass"]
     # newWin1 = -0.394
     # newWin2 = -0.240
@@ -166,20 +167,20 @@ def train_test_split(splitYear = 2015, path="./csv_data/"):
             continue
         if (int(row["Date"].split("/")[2]) == splitYear):
             test = True
-        if (test and not np.isnan(row["w_lf_1stWin%"]) and row["Comment"] == "Completed" and not np.isnan(row["PSW"]) and row["Surface"] != "Carpet" and not np.isnan(row["w_surf_1stWin%"]) and not np.isnan(row["w_mf_1stWin%"]) and not np.isnan(row["w_sf_1stWin%"]) and not np.isnan(row["l_surf_1stWin%"]) and not np.isnan(row["l_mf_1stWin%"]) and not np.isnan(row["l_sf_1stWin%"]) and not np.isnan(row["l_lf_1stWin%"])):
+        if (test and not np.isnan(row["w_lf_1stWin%"]) and row["Comment"] == "Completed" and row["Surface"] != "Carpet" and not np.isnan(row["w_surf_1stWin%"]) and not np.isnan(row["w_mf_1stWin%"]) and not np.isnan(row["w_sf_1stWin%"]) and not np.isnan(row["l_surf_1stWin%"]) and not np.isnan(row["l_mf_1stWin%"]) and not np.isnan(row["l_sf_1stWin%"]) and not np.isnan(row["l_lf_1stWin%"])):
             testRows.append(index)
-        elif (not test and not np.isnan(row["w_lf_1stWin%"]) and row["Comment"] == "Completed" and not np.isnan(row["PSW"]) and row["Surface"] != "Carpet" and not np.isnan(row["w_surf_1stWin%"]) and not np.isnan(row["w_mf_1stWin%"]) and not np.isnan(row["w_sf_1stWin%"]) and not np.isnan(row["l_surf_1stWin%"]) and not np.isnan(row["l_mf_1stWin%"]) and not np.isnan(row["l_sf_1stWin%"]) and not np.isnan(row["l_lf_1stWin%"])):
+        elif (not test and not np.isnan(row["w_lf_1stWin%"]) and row["Comment"] == "Completed" and row["Surface"] != "Carpet" and not np.isnan(row["w_surf_1stWin%"]) and not np.isnan(row["w_mf_1stWin%"]) and not np.isnan(row["w_sf_1stWin%"]) and not np.isnan(row["l_surf_1stWin%"]) and not np.isnan(row["l_mf_1stWin%"]) and not np.isnan(row["l_sf_1stWin%"]) and not np.isnan(row["l_lf_1stWin%"])):
             trainRows.append(index)
     data.iloc[trainRows].to_csv(path + "preMatchExpectations_train.csv", index = False)
     data.iloc[testRows].to_csv(path + "preMatchExpectations_test.csv", index = False)
 
-def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","book"]):
+def predict(path="./csv_data/", features = ["lf","mf","sf","surf"], method = "logistic_regression"):
     train = pd.read_csv(path + "preMatchExpectations_train.csv", encoding = "ISO-8859-1")
     test = pd.read_csv(path + "preMatchExpectations_test.csv", encoding = "ISO-8859-1")
-    keys = ["1stWin%","1stIn%","2ndWin%","2ndIn%","1stRtnWin%","2ndRtnWin%","Ace%","RtnSrv%","AcePer1stIn","Df%","DfPer2ndSrv","1stSrvEff","Def1stSrvEff","SrvRating","OppSrvRating","BpSaved%","BpWon%","RtnRating","OppRtnRating"]
+    keys = ["1stWin%","1stIn%","1stWin*In%","2ndWin%","2ndIn%","2ndWin*In%","1stRtnWin%","2ndRtnWin%","Ace%","RtnSrv%","AcePer1stIn","Df%","DfPer2ndSrv","1stSrvEff","Def1stSrvEff","SrvRating","OppSrvRating","BpSaved%","BpWon%","RtnRating","OppRtnRating"]
     cats = ["lf", "mf", "sf", "surf"]
 
-    dict = {"Player 1":[], "Player 2":[], "Book Rtg":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
+    dict = {"Player 1":[], "Player 2":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
     for cat in cats:
         for key in keys:
             for x in ["p1","p2"]:
@@ -191,10 +192,6 @@ def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","b
         if (num == 0):
             dict["Player 1"].append(row["Winner"])
             dict["Player 2"].append(row["Loser"])
-            if (row["PSW"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSW"]) - 1))
-            else:
-                dict["Book Rtg"].append(5.5)
             dict["Player 1 Odds"].append(row["PSW"])
             dict["Player 2 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(1)
@@ -205,10 +202,6 @@ def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","b
         elif (num == 1):
             dict["Player 2"].append(row["Winner"])
             dict["Player 1"].append(row["Loser"])
-            if (row["PSL"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSL"]) - 1))
-            else:
-                dict["Book Rtg"].append(5.5)
             dict["Player 2 Odds"].append(row["PSW"])
             dict["Player 1 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(0)
@@ -222,7 +215,7 @@ def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","b
 
 
 
-    dict = {"Player 1":[], "Player 2":[], "Book Rtg":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
+    dict = {"Player 1":[], "Player 2":[], "Player 1 Odds":[], "Player 2 Odds":[], "Player 1 Win":[]}
     for cat in cats:
         for key in keys:
             for x in ["p1","p2"]:
@@ -234,10 +227,6 @@ def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","b
         if (num == 0):
             dict["Player 1"].append(row["Winner"])
             dict["Player 2"].append(row["Loser"])
-            if (row["PSW"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSW"]) - 1))
-            else:
-                dict["Book Rtg"].append(5.5)
             dict["Player 1 Odds"].append(row["PSW"])
             dict["Player 2 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(1)
@@ -248,10 +237,6 @@ def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","b
         elif (num == 1):
             dict["Player 2"].append(row["Winner"])
             dict["Player 1"].append(row["Loser"])
-            if (row["PSL"] > 1):
-                dict["Book Rtg"].append(-np.log(1/(1/row["PSL"]) - 1))
-            else:
-                dict["Book Rtg"].append(5.5)
             dict["Player 2 Odds"].append(row["PSW"])
             dict["Player 1 Odds"].append(row["PSL"])
             dict["Player 1 Win"].append(0)
@@ -326,14 +311,23 @@ def logistic_regression(path="./csv_data/", features = ["lf","mf","sf","surf","b
     X_train[xCols] = scaler.fit_transform(X_train[xCols])
     X_test = pd.DataFrame(test, columns = xCols)
     X_test[xCols] = scaler.transform(X_test[xCols])
-    model = LogisticRegression(max_iter = 100000, C = 999999999)
-    model.fit(X = X_train, y = y_train)
-    for p in model.predict_proba(X_test):
-        if (model.classes_[1] == 1):
-            predictions.append(p[1])
-        else:
-            predictions.append(p[0])
-    test["Player 1 Prob"] = predictions
-
-
-    test.to_csv(path + "predictions.csv", index = False)
+    if (method == "logistic_regression"):
+        model = LogisticRegression(max_iter = 100000, C = 999999999)
+        model.fit(X = X_train, y = y_train)
+        for p in model.predict_proba(X_test):
+            if (model.classes_[1] == 1):
+                predictions.append(p[1])
+            else:
+                predictions.append(p[0])
+        test["Player 1 Prob"] = predictions
+        test.to_csv(path + method + "_predictions.csv", index = False)
+    elif (method == "neural_network"):
+        model = MLPClassifier(random_state = 122, max_iter = 100000, verbose = True, activation = "logistic", learning_rate = "adaptive")
+        model.fit(X = X_train, y = y_train)
+        for p in model.predict_proba(X_test):
+            if (model.classes_[1] == 1):
+                predictions.append(p[1])
+            else:
+                predictions.append(p[0])
+        test["Player 1 Prob"] = predictions
+        test.to_csv(path + method + "_predictions.csv", index = False)
