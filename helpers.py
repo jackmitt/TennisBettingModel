@@ -228,3 +228,10 @@ def set_prob(p1_in1, p1_win1, p1_in2, p1_win2, p2_in1, p2_win1, p2_in2, p2_win2)
     c6 = aa**6*bb**5*ba + 25*aa**5*ab*bb**4*ba**2 + 100*aa**4*ab**2*bb**3*ba**3 + 100*aa**3*ab**3*bb**2*ba**4 + 25*aa**2*ab**4*bb*ba**5 + aa*ab**5*ba**6
     c7 = p1_tiebreak_win * (aa**6*bb**6 + 26*aa**5*ab*bb**5*ba + 125*aa**4*ab**2*bb**4*ba**2 + 200*aa**3*ab**3*bb**3*ba**3 + 250*aa**2*ab**4*bb**2*ba**4 + 26*aa*ab**5*bb*ba**5 + ab**6*ba**6)
     return (c1 + c2 + c3 + c4 + c5 + c6 + c7)
+
+def match_prob(p1_in1, p1_win1, p1_in2, p1_win2, p2_in1, p2_win1, p2_in2, p2_win2, bestOf = 3):
+    p1_set_win = set_prob(p1_in1, p1_win1, p1_in2, p1_win2, p2_in1, p2_win1, p2_in2, p2_win2)
+    if (bestOf == 3):
+        return (p1_set_win**2 + 2*p1_set_win**2*(1-p1_set_win))
+    else:
+        return (p1_set_win**3 + 3*p1_set_win**3*(1-p1_set_win) + 6*p1_set_win**3*(1-p1_set_win)**2)
