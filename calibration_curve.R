@@ -2,7 +2,7 @@ library(dplyr)
 library(tidyr)
 library(ggplot2)
 
-data = read.csv("C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/6.0/neural_network_predictions.csv")
+data = read.csv("C:/Users/JackMitt/Documents/TennisBettingModel/csv_data/6.0/points_based_predictions.csv")
 
 ah = data %>% select(Player.1.Win, Player.1.Prob) %>% drop_na() %>% arrange(Player.1.Prob)
 

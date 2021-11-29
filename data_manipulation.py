@@ -8,6 +8,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.linear_model import LinearRegression
 from sklearn.neural_network import MLPClassifier
+from helpers import match_prob
 
 def assemble_data():
     #combine matches first
@@ -174,6 +175,7 @@ def train_test_split(splitYear = 2015, path="./csv_data/"):
     data.iloc[trainRows].to_csv(path + "preMatchExpectations_train.csv", index = False)
     data.iloc[testRows].to_csv(path + "preMatchExpectations_test.csv", index = False)
 
+#method could be: logistic_regression, neural_network, points_based
 def predict(path="./csv_data/", features = ["lf","mf","sf","surf"], method = "logistic_regression"):
     train = pd.read_csv(path + "preMatchExpectations_train.csv", encoding = "ISO-8859-1")
     test = pd.read_csv(path + "preMatchExpectations_test.csv", encoding = "ISO-8859-1")
@@ -187,7 +189,55 @@ def predict(path="./csv_data/", features = ["lf","mf","sf","surf"], method = "lo
                 dict[x + "_" + cat + "_" + key] = []
                 dict[x + "_" + cat + "_" + key] = []
 
+    if (method == "points_based"):
+        newTr = {"act_1stIn%":[],"act_1stWin%":[],"act_2ndIn%":[],"act_2ndWin%":[]}
+        for x in keys:
+            for y in cats:
+                if ("1stIn%" in x or "2ndIn%" in x or "1stWin%" in x or "Ace%" in x or "2ndWin%" in x):
+                    if (y not in features):
+                        continue
+                    newTr[y + "_" + x] = []
+                if ("1stRtnWin%" in x or "RtnSrv%" in x or "2ndRtnWin%" in x):
+                    if (y not in features):
+                        continue
+                    newTr["x_" + y + "_" + x] = []
+
+        newTe = {"act_1stIn%":[],"act_1stWin%":[],"act_2ndIn%":[],"act_2ndWin%":[]}
+        for x in keys:
+            for y in cats:
+                if ("1stIn%" in x or "2ndIn%" in x or "1stWin%" in x or "Ace%" in x or "2ndWin%" in x):
+                    if (y not in features):
+                        continue
+                    newTe[y + "_" + x] = []
+                if ("1stRtnWin%" in x or "RtnSrv%" in x or "2ndRtnWin%" in x):
+                    if (y not in features):
+                        continue
+                    newTe["x_" + y + "_" + x] = []
+
     for index, row in train.iterrows():
+        if (method == "points_based"):
+            if (row["w_svpt"] - row["w_1stIn"] > 0 and row["w_svpt"] - row["w_1stIn"] - row["w_df"] > 0 and row["w_1stIn"] > 0):
+                newTr["act_1stIn%"].append(row["w_1stIn"] / row["w_svpt"])
+                newTr["act_1stWin%"].append(row["w_1stWon"] / row["w_1stIn"])
+                newTr["act_2ndIn%"].append((row["w_svpt"] - row["w_1stIn"] - row["w_df"]) / (row["w_svpt"] - row["w_1stIn"]))
+                newTr["act_2ndWin%"].append(row["w_2ndWon"] / (row["w_svpt"] - row["w_1stIn"] - row["w_df"]))
+                for key in newTr:
+                    if ("act" not in key):
+                        if ("x_" not in key):
+                            newTr[key].append(row["w_" + key])
+                        else:
+                            newTr[key].append(row["l_" + key.split("x_")[1]])
+            if (row["l_svpt"] - row["l_1stIn"] > 0 and row["l_svpt"] - row["l_1stIn"] - row["l_df"] > 0 and row["l_1stIn"] > 0):
+                newTr["act_1stIn%"].append(row["l_1stIn"] / row["l_svpt"])
+                newTr["act_1stWin%"].append(row["l_1stWon"] / row["l_1stIn"])
+                newTr["act_2ndIn%"].append((row["l_svpt"] - row["l_1stIn"] - row["l_df"]) / (row["l_svpt"] - row["l_1stIn"]))
+                newTr["act_2ndWin%"].append(row["l_2ndWon"] / (row["l_svpt"] - row["l_1stIn"] - row["l_df"]))
+                for key in newTr:
+                    if ("act" not in key):
+                        if ("x_" not in key):
+                            newTr[key].append(row["l_" + key])
+                        else:
+                            newTr[key].append(row["w_" + key.split("x_")[1]])
         num = random.randint(0,1)
         if (num == 0):
             dict["Player 1"].append(row["Winner"])
@@ -294,24 +344,24 @@ def predict(path="./csv_data/", features = ["lf","mf","sf","surf"], method = "lo
     #     test[key] = dict[key]
 
     predictions = []
-    tempcols = []
-    for x in xCols:
-        tempcols.append(x)
-    tempcols.append("Player 1")
-    tempcols.append("Player 2")
-    tempcols.append("Player 1 Odds")
-    tempcols.append("Player 2 Odds")
-    tempcols.append("Player 1 Win")
-    train = pd.DataFrame(train, columns = tempcols).dropna()
-    test = pd.DataFrame(test, columns = tempcols).dropna()
-    y_train = train["Player 1 Win"]
-    #xCols = ["p1_expected_1stServePoint%_above_expectation", "p1_expected_2ndServePoint%_above_expectation", "p2_expected_1stServePoint%_above_expectation", "p2_expected_2ndServePoint%_above_expectation", "p1_adj_expected_1stServePoint%_above_expectation", "p1_adj_expected_2ndServePoint%_above_expectation", "p2_adj_expected_1stServePoint%_above_expectation", "p2_adj_expected_2ndServePoint%_above_expectation", "p1_surf_adj_expected_1stServePoint%_above_expectation", "p1_surf_adj_expected_2ndServePoint%_above_expectation", "p2_surf_adj_expected_1stServePoint%_above_expectation", "p2_surf_adj_expected_2ndServePoint%_above_expectation", "Book Rtg"]
-    scaler = StandardScaler()
-    X_train = pd.DataFrame(train, columns = xCols)
-    X_train[xCols] = scaler.fit_transform(X_train[xCols])
-    X_test = pd.DataFrame(test, columns = xCols)
-    X_test[xCols] = scaler.transform(X_test[xCols])
+
     if (method == "logistic_regression"):
+        tempcols = []
+        for x in xCols:
+            tempcols.append(x)
+        tempcols.append("Player 1")
+        tempcols.append("Player 2")
+        tempcols.append("Player 1 Odds")
+        tempcols.append("Player 2 Odds")
+        tempcols.append("Player 1 Win")
+        train = pd.DataFrame(train, columns = tempcols).dropna()
+        test = pd.DataFrame(test, columns = tempcols).dropna()
+        y_train = train["Player 1 Win"]
+        scaler = StandardScaler()
+        X_train = pd.DataFrame(train, columns = xCols)
+        X_train[xCols] = scaler.fit_transform(X_train[xCols])
+        X_test = pd.DataFrame(test, columns = xCols)
+        X_test[xCols] = scaler.transform(X_test[xCols])
         model = LogisticRegression(max_iter = 100000, C = 999999999)
         model.fit(X = X_train, y = y_train)
         for p in model.predict_proba(X_test):
@@ -322,6 +372,22 @@ def predict(path="./csv_data/", features = ["lf","mf","sf","surf"], method = "lo
         test["Player 1 Prob"] = predictions
         test.to_csv(path + method + "_predictions.csv", index = False)
     elif (method == "neural_network"):
+        tempcols = []
+        for x in xCols:
+            tempcols.append(x)
+        tempcols.append("Player 1")
+        tempcols.append("Player 2")
+        tempcols.append("Player 1 Odds")
+        tempcols.append("Player 2 Odds")
+        tempcols.append("Player 1 Win")
+        train = pd.DataFrame(train, columns = tempcols).dropna()
+        test = pd.DataFrame(test, columns = tempcols).dropna()
+        y_train = train["Player 1 Win"]
+        scaler = StandardScaler()
+        X_train = pd.DataFrame(train, columns = xCols)
+        X_train[xCols] = scaler.fit_transform(X_train[xCols])
+        X_test = pd.DataFrame(test, columns = xCols)
+        X_test[xCols] = scaler.transform(X_test[xCols])
         model = MLPClassifier(random_state = 122, max_iter = 100000, verbose = True, activation = "logistic", learning_rate = "adaptive")
         model.fit(X = X_train, y = y_train)
         for p in model.predict_proba(X_test):
@@ -329,5 +395,104 @@ def predict(path="./csv_data/", features = ["lf","mf","sf","surf"], method = "lo
                 predictions.append(p[1])
             else:
                 predictions.append(p[0])
+        test["Player 1 Prob"] = predictions
+        test.to_csv(path + method + "_predictions.csv", index = False)
+    elif (method == "points_based"):
+        pred_p1_1stIn = []
+        pred_p1_2ndIn = []
+        pred_p1_1stWin = []
+        pred_p1_2ndWin = []
+        pred_p2_1stIn = []
+        pred_p2_2ndIn = []
+        pred_p2_1stWin = []
+        pred_p2_2ndWin = []
+        newTr = pd.DataFrame.from_dict(newTr)
+        m1Cols = []
+        m2Cols = []
+        m3Cols = []
+        m4Cols = []
+        for cat in cats:
+            m1Cols.append(cat + "_1stIn%")
+            m2Cols.append(cat + "_2ndIn%")
+            m3Cols.append(cat + "_1stWin%")
+            m3Cols.append("x_" + cat + "_1stRtnWin%")
+            m3Cols.append(cat + "_Ace%")
+            m3Cols.append("x_" + cat + "_RtnSrv%")
+            m4Cols.append(cat + "_2ndWin%")
+            m4Cols.append("x_" + cat + "_2ndRtnWin%")
+        modelDict = {}
+        pd.DataFrame(newTr)
+        modelDict["1stIn%"] = LinearRegression(fit_intercept = False).fit(X = newTr[m1Cols], y = newTr["act_1stIn%"].to_numpy().reshape(-1,1))
+        modelDict["2ndIn%"] = LinearRegression(fit_intercept = False).fit(X = newTr[m2Cols], y = newTr["act_2ndIn%"].to_numpy().reshape(-1,1))
+        modelDict["1stWin%"] = LinearRegression(fit_intercept = False).fit(X = newTr[m3Cols], y = newTr["act_1stWin%"].to_numpy().reshape(-1,1))
+        modelDict["2ndWin%"] = LinearRegression(fit_intercept = False).fit(X = newTr[m4Cols], y = newTr["act_2ndWin%"].to_numpy().reshape(-1,1))
+        p1m1Cols = []
+        p1m2Cols = []
+        p1m3Cols = []
+        p1m4Cols = []
+        p2m1Cols = []
+        p2m2Cols = []
+        p2m3Cols = []
+        p2m4Cols = []
+        for cat in cats:
+            p1m1Cols.append("p1_" + cat + "_1stIn%")
+            p1m2Cols.append("p1_" + cat + "_2ndIn%")
+            p1m3Cols.append("p1_" + cat + "_1stWin%")
+            p1m3Cols.append("p2_" + cat + "_1stRtnWin%")
+            p1m3Cols.append("p1_" + cat + "_Ace%")
+            p1m3Cols.append("p2_" + cat + "_RtnSrv%")
+            p1m4Cols.append("p1_" + cat + "_2ndWin%")
+            p1m4Cols.append("p2_" + cat + "_2ndRtnWin%")
+            p2m1Cols.append("p2_" + cat + "_1stIn%")
+            p2m2Cols.append("p2_" + cat + "_2ndIn%")
+            p2m3Cols.append("p2_" + cat + "_1stWin%")
+            p2m3Cols.append("p1_" + cat + "_1stRtnWin%")
+            p2m3Cols.append("p2_" + cat + "_Ace%")
+            p2m3Cols.append("p1_" + cat + "_RtnSrv%")
+            p2m4Cols.append("p2_" + cat + "_2ndWin%")
+            p2m4Cols.append("p1_" + cat + "_2ndRtnWin%")
+        for index, row in test.iterrows():
+            a = []
+            for col in p1m1Cols:
+                a.append(row[col])
+            pred_p1_1stIn.append(modelDict["1stIn%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p1m2Cols:
+                a.append(row[col])
+            pred_p1_2ndIn.append(modelDict["2ndIn%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p1m3Cols:
+                a.append(row[col])
+            pred_p1_1stWin.append(modelDict["1stWin%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p1m4Cols:
+                a.append(row[col])
+            pred_p1_2ndWin.append(modelDict["2ndWin%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p2m1Cols:
+                a.append(row[col])
+            pred_p2_1stIn.append(modelDict["1stIn%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p2m2Cols:
+                a.append(row[col])
+            pred_p2_2ndIn.append(modelDict["2ndIn%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p2m3Cols:
+                a.append(row[col])
+            pred_p2_1stWin.append(modelDict["1stWin%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+            a = []
+            for col in p2m4Cols:
+                a.append(row[col])
+            pred_p2_2ndWin.append(modelDict["2ndWin%"].predict(np.asarray(a).reshape(1, -1))[0][0])
+        test["pred_p1_1stIn"] = pred_p1_1stIn
+        test["pred_p1_2ndIn"] = pred_p1_2ndIn
+        test["pred_p1_1stWin"] = pred_p1_1stWin
+        test["pred_p1_2ndWin"] = pred_p1_2ndWin
+        test["pred_p2_1stIn"] = pred_p2_1stIn
+        test["pred_p2_2ndIn"] = pred_p2_2ndIn
+        test["pred_p2_1stWin"] = pred_p2_1stWin
+        test["pred_p2_2ndWin"] = pred_p2_2ndWin
+        for i in range(len(pred_p1_1stIn)):
+            predictions.append(match_prob(pred_p1_1stIn[i], pred_p1_1stWin[i], pred_p1_2ndIn[i], pred_p1_2ndWin[i], pred_p2_1stIn[i], pred_p2_1stWin[i], pred_p2_2ndIn[i], pred_p2_2ndWin[i], row["Best of"]))
         test["Player 1 Prob"] = predictions
         test.to_csv(path + method + "_predictions.csv", index = False)
